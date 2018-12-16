@@ -10,7 +10,7 @@ Organize your scientific publications with BibTeX in Pelican. The package is bas
 
 ## Using pip
 
-    pip install pelican_bib
+    pip install pelican-bib
 
 Add the plugin to the `PLUGINS` variable:
 
@@ -25,7 +25,7 @@ In your Pelican site:
 
 And Pelican config:
 
-    PLUGIN_PATHS = ['plugins/', ...]
+    PLUGIN_PATHS = ['plugins/pelican_bib', ...]
     PLUGINS = ['pelican_bib', ...]
     
 ## How to Use

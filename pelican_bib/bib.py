@@ -101,13 +101,14 @@ def add_publications(generator):
         slides = entry.fields.get('slides', None)
         poster = entry.fields.get('poster', None)
 
+        tags = []
         if split_by:
             tags = entry.fields.get(split_by, [])
 
             # parse to list, and trim each string
             if tags:
-                tags = tags.split(",")
-                tags = list(map(str.strip, tags))
+
+                tags = [tag.strip() for tag in tags.split(',')]
 
                 # create keys in publications_lists if at least one
                 # tag is given

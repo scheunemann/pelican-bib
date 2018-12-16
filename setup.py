@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = __import__('pelican_bib').__version__
+version = "0.2.7"
 download_url = 'https://github.com/scheunemann/pelican-bib/archive/{}.zip'.format(version)
 
 with open("README.md", "r") as fh:
@@ -24,6 +24,7 @@ setup(
     name="pelican-bib",
     #version=pelican_bib.__version__,
     version=version,
+    download_url=download_url,
     author="Marcus M. Scheunemann",
     author_email="find@mms.ai",
     description="Organize your scientific publications using Pelican and BibTeX",
