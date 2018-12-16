@@ -8,7 +8,7 @@ CLASSIFIERS = """\
 Development Status :: 3 - Alpha
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: Public Domain
+License :: OSI Approved :: MIT License
 Programming Language :: Python
 Programming Language :: Python :: 3
 Topic :: Scientific/Engineering
