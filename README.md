@@ -2,21 +2,15 @@
 
 Organize your scientific publications with BibTeX in Pelican. The package is based on Vlad's [pelican-bibtex](https://github.com/vene/pelican-bibtex). The current version is backward compatible and can replace the `pelican-bibtex` install of your current project.
 
-## Requirements
+## Installation
 
 `pelican_bib` requires `pybtex`.
 
     pip install pybtex
 
-## Installation
+## Using pip
 
-First, clone the repo:
-
-    $ git clone git@github.com:scheunemann/pelican-bib.git
-
-Then add the path to the `PLUGIN_PATHS` variable in your Pelican config to the folder:
-
-    PLUGIN_PATHS = ['/path/to/folder/containing/pelican-bib', ...]
+    pip install pelican_bib
 
 Add the plugin to the `PLUGINS` variable:
 

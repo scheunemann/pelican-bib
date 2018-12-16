@@ -28,7 +28,7 @@ setup(
     description="Organize your scientific publications using Pelican and BibTeX",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://mms.ai",
+    url="https://github.com/scheunemann/pelican-bib",
     packages=find_packages(),
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
 )
