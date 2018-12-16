@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Pelican Bib
 ===========
@@ -15,8 +17,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 from pelican import signals
-
-__version__ = '0.2.2'
 
 
 def add_publications(generator):
