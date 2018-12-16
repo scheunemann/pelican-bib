@@ -1,6 +1,6 @@
 """
-Pelican BibTeX
-==============
+Pelican Bib
+===========
 
 A Pelican plugin that populates the context with a list of formatted
 citations, loaded from a BibTeX file at a configurable path.
@@ -61,14 +61,14 @@ def add_publications(generator):
         from pybtex.backends import html
         from pybtex.style.formatting import plain
     except ImportError:
-        logger.warn('`pelican_bibtex` failed to load dependency `pybtex`')
+        logger.warn('`pelican_bib` failed to load dependency `pybtex`')
         return
 
     refs_file = generator.settings['PUBLICATIONS_SRC']
     try:
         bibdata_all = Parser().parse_file(refs_file)
     except PybtexError as e:
-        logger.warn('`pelican_bibtex` failed to parse file %s: %s' % (
+        logger.warn('`pelican_bib` failed to parse file %s: %s' % (
             refs_file,
             str(e)))
         return
@@ -122,12 +122,12 @@ def add_publications(generator):
         text = formatted_entry.text.render(html_backend)
 
         entry_tuple = {'key': key,
-                             'year': year,
-                             'text': text,
-                             'bibtex': bib_buf.getvalue(),
-                             'pdf': pdf,
-                             'slides': slides,
-                             'poster': poster}
+                       'year': year,
+                       'text': text,
+                       'bibtex': bib_buf.getvalue(),
+                       'pdf': pdf,
+                       'slides': slides,
+                       'poster': poster}
 
         publications.append(entry_tuple)
 
