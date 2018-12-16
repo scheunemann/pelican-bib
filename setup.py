@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
 version = __import__('pelican_bib').__version__
+download_url = 'https://github.com/scheunemann/pelican-bib/archive/{}.zip'.format(version)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
