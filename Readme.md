@@ -36,9 +36,6 @@ PUBLICATIONS_SRC = 'content/pubs.bib'
 
 If the file is present and readable, you will be able to find the `publications`
 variable in all templates.  It is a list of dictionaries with the following keys:
-```
-key, year, text, bibtex, pdf, slides, poster
-```
 
 1. `key` is the BibTeX key (identifier) of the entry.
 2. `year` is the year when the entry was published.  Useful for grouping by year in templates using Jinja's `groupby`
@@ -87,10 +84,10 @@ using `forceescape`.
 <section id="content" class="body">
     <h1 class="entry-title">Publications</h1>
     <ul>
-      {% for group in publications|groupby('year')|reverse %}
-      <li> {{group.grouper}}
+      {% for grouper, publist in publications|groupby('year')|reverse %}
+      <li> {{grouper}}
         <ul>
-        {% for publication in group.list %}
+        {% for publication in publist %}
           <li id="{{ publication.key }}">{{ publication.text }}
           [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
           {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
