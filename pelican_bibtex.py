@@ -31,7 +31,7 @@ def add_publications(generator):
     Output
     ------
     generator.context['publications']:
-        List of tuples (key, year, text, bibtex, pdf, slides, poster).
+        List of dictionaries with keys "key, year, text, bibtex, pdf, slides, poster".
         See Readme.md for more details.
     """
     if 'PUBLICATIONS_SRC' not in generator.settings:
@@ -82,13 +82,13 @@ def add_publications(generator):
         Writer().write_stream(bibdata_this, bib_buf)
         text = formatted_entry.text.render(html_backend)
 
-        publications.append((key,
-                             year,
-                             text,
-                             bib_buf.getvalue(),
-                             pdf,
-                             slides,
-                             poster))
+        publications.append({'key': key,
+                             'year': year,
+                             'text': text,
+                             'bibtex': bib_buf.getvalue(),
+                             'pdf': pdf,
+                             'slides': slides,
+                             'poster': poster})
 
     generator.context['publications'] = publications
 
