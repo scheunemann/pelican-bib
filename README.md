@@ -3,15 +3,40 @@ Pelican Bib
 
 Organize your scientific publications with BibTeX in Pelican. The package is based on Vlad's [pelican-bibtex](https://github.com/vene/pelican-bibtex). The current version is backward compatible and can replace the `pelican-bibtex` install of your current project.
 
-Requirements
-============
+## Requirements
 
-`pelican_bibtex` requires `pybtex`.
+`pelican_bib` requires `pybtex`.
 
 ```bash
-pip install pybtex
+    pip install pybtex
 ```
 
+## Installation
+
+First, clone the repo:
+
+    $ git clone git@github.com:scheunemann/pelican-bib.git
+
+Then add the path to the `PLUGIN_PATHS` variable in your Pelican config to the folder:
+
+    PLUGIN_PATHS = ['/path/to/folder/containing/pelican-bib', ...]
+
+Add the plugin to the `PLUGINS` variable:
+
+    PLUGINS = ['pelican_bib', ...]
+
+### As a Submodule
+
+In your Pelican site:
+
+    $ mkdir plugins
+    $ git submodule add https://github.com/scheunemann/pelican-bib plugins/pelican-bib
+
+And Pelican config:
+
+    PLUGIN_PATHS = ['plugins/', ...]
+    PLUGINS = ['pelican_bib', ...]
+    
 How to Use
 ==========
 
@@ -190,18 +215,18 @@ The section of the previous example changes to:
 ...
 ```
 
-Creating a page with a list of publications
+Page with a list of publications
 --------------------------------------------
 
-A common usage is displaying a list of publications of a group or an individual. If you want to have a static page displaying the publications as one of the methogs above. You need to add a template file and a page.
+To generate a page displaying the publications with one of the methods above. You need to add a template file and a page.
 
-For example, place the template above as `publications.html` in a `content/templates` and add the follwoing to your `pelicanconf.py`:
+1.) place the template above as `publications.html` in `content/templates` and add it as direct template to your webpage. Add in your `pelicanconf.py`:
 
 ```python
     THEME_TEMPLATES_OVERRIDES.append('templates')
 ```
 
-Now, create a new page in your page folder, e.g., 'content/pages' with the content:
+2.) Create a page in your page folder, e.g., 'content/pages/publications.rst' with the following metadata in your content:
 
 ```python
     Publications
