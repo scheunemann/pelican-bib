@@ -77,14 +77,10 @@ def add_publications(generator):
     publications_lists = {}
     publications_untagged = []
 
-    split_by = None
-    untagged_title = None
+    split_by = generator.settings.get('PUBLICATIONS_SPLIT_BY', None)
+    untagged_title = generator.settings.get('PUBLICATIONS_UNTAGGED_TITLE', None)
 
-    if 'PUBLICATIONS_SPLIT_BY' in generator.settings:
-        split_by = generator.settings['PUBLICATIONS_SPLIT_BY']
 
-    if 'PUBLICATIONS_UNTAGGED_TITLE' in generator.settings:
-        untagged_title = generator.settings['PUBLICATIONS_UNTAGGED_TITLE']
 
     # format entries
     plain_style = plain.Style()
