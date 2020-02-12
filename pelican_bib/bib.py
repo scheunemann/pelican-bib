@@ -59,7 +59,7 @@ def add_publications(generator):
         from pybtex.database.output.bibtex import Writer
         from pybtex.database import BibliographyData, PybtexError
         from pybtex.backends import html
-        from pybtex.style.formatting import plain
+        from pybtex.style.formatting import BaseStyle, plain
     except ImportError:
         logger.warn('`pelican_bib` failed to load dependency `pybtex`')
         return
@@ -80,12 +80,18 @@ def add_publications(generator):
     split_by = generator.settings.get('PUBLICATIONS_SPLIT_BY', None)
     untagged_title = generator.settings.get('PUBLICATIONS_UNTAGGED_TITLE', None)
 
-
-
     # format entries
-    plain_style = plain.Style()
+    kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
+    style_cls = generator.settings.get('PUBLICATIONS_STYLE', plain.Style)
+
+    if isinstance(style_cls, type) and issubclass(style_cls, BaseStyle):
+        style = style_cls(**kwargs)
+    else:
+        style = plain.Style()
+        logger.warn('PUBLICATIONS_STYLE must be a subclass of pybtex.style.formatting.BaseStyle')
+
     html_backend = html.Backend()
-    formatted_entries = plain_style.format_entries(bibdata_all.entries.values())
+    formatted_entries = style.format_entries(bibdata_all.entries.values())
 
     for formatted_entry in formatted_entries:
         key = formatted_entry.key
