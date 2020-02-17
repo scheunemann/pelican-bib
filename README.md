@@ -99,21 +99,18 @@ is a simple example that will highlight the name of the website's author. Add
 the following to your Pelican config:
 
 ```python
-import sys
-sys.path.append('.')
-from plugins.highlight import HighlightStyle
-PUBLICATIONS_STYLE = HighlightStyle
+PUBLICATIONS_CUSTOM_STYLE = True
 PUBLICATIONS_STYLE_ARGS = {'site_author': AUTHOR}
 ```
 
-Then create the file `plugins/highlight.py` with the following content:
+Then create the file `plugins/pybtex_plugins.py` with the following content:
 
 ```python
 from pybtex.database import Person
 from pybtex.style.formatting import unsrt
 from pybtex.style.template import tag
 
-class HighlightStyle(unsrt.Style):
+class PelicanStyle(unsrt.Style):
 
     def __init__(self, site_author='', **kwargs):
         super().__init__(**kwargs)
@@ -128,6 +125,10 @@ class HighlightStyle(unsrt.Style):
 
         self.format_name = format
 ```
+
+`PelicanStyle` must be a subclass of `pybtex.style.formatting.BaseStyle`. An
+alternative path to the `pybtex_plugins.py` file can be provided via
+`PUBLICATIONS_PLUGIN_PATH` in the Pelican config.
 
 ## Page with a list of publications
 
