@@ -64,6 +64,25 @@ def add_publications(generator):
         logger.warn('`pelican_bib` failed to load dependency `pybtex`')
         return
 
+    plugin_path = generator.settings.get('PUBLICATIONS_PLUGIN_PATH', 'plugins')
+    import sys
+    sys.path.append(plugin_path)
+
+    style = plain.Style()
+    if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
+        try:
+            from pybtex_plugins import PelicanStyle
+            if not isinstance(PelicanStyle, type) or not issubclass(PelicanStyle, BaseStyle):
+                raise TypeError()
+            kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
+            style = PelicanStyle(**kwargs)
+        except ImportError as e:
+            logger.warn(str(e))
+            logger.warn('pybtex_plugins.PelicanStyle not found, using Pybtex plain style')
+        except TypeError:
+            logger.warn('PelicanStyle must be a subclass of pybtex.style.formatting.BaseStyle')
+
+
     refs_file = generator.settings['PUBLICATIONS_SRC']
     try:
         bibdata_all = Parser().parse_file(refs_file)
@@ -81,15 +100,6 @@ def add_publications(generator):
     untagged_title = generator.settings.get('PUBLICATIONS_UNTAGGED_TITLE', None)
 
     # format entries
-    kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
-    style_cls = generator.settings.get('PUBLICATIONS_STYLE', plain.Style)
-
-    if isinstance(style_cls, type) and issubclass(style_cls, BaseStyle):
-        style = style_cls(**kwargs)
-    else:
-        style = plain.Style()
-        logger.warn('PUBLICATIONS_STYLE must be a subclass of pybtex.style.formatting.BaseStyle')
-
     html_backend = html.Backend()
     formatted_entries = style.format_entries(bibdata_all.entries.values())
 
