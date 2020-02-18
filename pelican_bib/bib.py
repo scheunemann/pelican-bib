@@ -59,10 +59,29 @@ def add_publications(generator):
         from pybtex.database.output.bibtex import Writer
         from pybtex.database import BibliographyData, PybtexError
         from pybtex.backends import html
-        from pybtex.style.formatting import plain
+        from pybtex.style.formatting import BaseStyle, plain
     except ImportError:
         logger.warn('`pelican_bib` failed to load dependency `pybtex`')
         return
+
+    plugin_path = generator.settings.get('PUBLICATIONS_PLUGIN_PATH', 'plugins')
+    import sys
+    sys.path.append(plugin_path)
+
+    style = plain.Style()
+    if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
+        try:
+            from pybtex_plugins import PelicanStyle
+            if not isinstance(PelicanStyle, type) or not issubclass(PelicanStyle, BaseStyle):
+                raise TypeError()
+            kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
+            style = PelicanStyle(**kwargs)
+        except ImportError as e:
+            logger.warn(str(e))
+            logger.warn('pybtex_plugins.PelicanStyle not found, using Pybtex plain style')
+        except TypeError:
+            logger.warn('PelicanStyle must be a subclass of pybtex.style.formatting.BaseStyle')
+
 
     refs_file = generator.settings['PUBLICATIONS_SRC']
     try:
@@ -77,19 +96,12 @@ def add_publications(generator):
     publications_lists = {}
     publications_untagged = []
 
-    split_by = None
-    untagged_title = None
-
-    if 'PUBLICATIONS_SPLIT_BY' in generator.settings:
-        split_by = generator.settings['PUBLICATIONS_SPLIT_BY']
-
-    if 'PUBLICATIONS_UNTAGGED_TITLE' in generator.settings:
-        untagged_title = generator.settings['PUBLICATIONS_UNTAGGED_TITLE']
+    split_by = generator.settings.get('PUBLICATIONS_SPLIT_BY', None)
+    untagged_title = generator.settings.get('PUBLICATIONS_UNTAGGED_TITLE', None)
 
     # format entries
-    plain_style = plain.Style()
     html_backend = html.Backend()
-    formatted_entries = plain_style.format_entries(bibdata_all.entries.values())
+    formatted_entries = style.format_entries(bibdata_all.entries.values())
 
     for formatted_entry in formatted_entries:
         key = formatted_entry.key

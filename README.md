@@ -91,6 +91,44 @@ the field defined in `PUBLICATIONS_SPLIT_BY`) to a tag named `others`, set:
 
     PUBLICATIONS_UNTAGGED_TITLE = 'others'
 
+### Custom pybtex styles
+
+By default, the `pybtex.style.formatting.plain` style is applied to the list
+of publications, but it is also possible to supply custom pybtex styles. Here
+is a simple example that will highlight the name of the website's author. Add
+the following to your Pelican config:
+
+```python
+PUBLICATIONS_CUSTOM_STYLE = True
+PUBLICATIONS_STYLE_ARGS = {'site_author': AUTHOR}
+```
+
+Then create the file `plugins/pybtex_plugins.py` with the following content:
+
+```python
+from pybtex.database import Person
+from pybtex.style.formatting import unsrt
+from pybtex.style.template import tag
+
+class PelicanStyle(unsrt.Style):
+
+    def __init__(self, site_author='', **kwargs):
+        super().__init__(**kwargs)
+        self.site_author = Person(site_author)
+
+        # Allows to apply special formatting to a specific author.
+        def format(person, abbr=False):
+            if person == self.site_author:
+                return tag('strong') [ self.name_style.format(person, abbr) ]
+            else:
+                return self.name_style.format(person, abbr)
+
+        self.format_name = format
+```
+
+`PelicanStyle` must be a subclass of `pybtex.style.formatting.BaseStyle`. An
+alternative path to the `pybtex_plugins.py` file can be provided via
+`PUBLICATIONS_PLUGIN_PATH` in the Pelican config.
 
 ## Page with a list of publications
 
