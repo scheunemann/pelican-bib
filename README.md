@@ -25,7 +25,7 @@ In your Pelican site:
 
 And Pelican config:
 
-    PLUGIN_PATHS = ['plugins/pelican_bib', ...]
+    PLUGIN_PATHS = ['plugins/pelican-bib', ...]
     PLUGINS = ['pelican_bib', ...]
     
 ## How to Use
