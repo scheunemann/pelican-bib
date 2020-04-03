@@ -33,4 +33,7 @@ setup(
     url="https://github.com/scheunemann/pelican-bib",
     packages=find_packages(),
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
+    install_requires=[
+        'pybtex',
+    ],
 )
