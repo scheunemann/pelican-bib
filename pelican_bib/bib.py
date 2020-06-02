@@ -15,8 +15,9 @@ websites.
 
 import logging
 logger = logging.getLogger(__name__)
-
+import re as regex
 from pelican import signals
+from .tagdecorator import *
 
 
 def add_publications(generator):
@@ -35,6 +36,10 @@ def add_publications(generator):
     generator.settings['PUBLICATIONS_UNTAGGED_TITLE']:
         The title of the header for all untagged entries.
         No such list if title is not provided.
+
+    generator.settings['PUBLICATIONS_DECORATE_TAGS']:
+        If set to True, elements of a publication entry (e.g. names, title)
+        will be decorated with a <span> tag with a specific class name
 
     Output
     ------
@@ -64,18 +69,20 @@ def add_publications(generator):
         logger.warn('`pelican_bib` failed to load dependency `pybtex`')
         return
 
+    decorate_tags = generator.settings.get('PUBLICATIONS_DECORATE_TAGS', False)
+
     plugin_path = generator.settings.get('PUBLICATIONS_PLUGIN_PATH', 'plugins')
     import sys
     sys.path.append(plugin_path)
 
-    style = plain.Style()
+    style = get_style_class(plain.Style,decorate_tags)()
     if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
         try:
             from pybtex_plugins import PelicanStyle
             if not isinstance(PelicanStyle, type) or not issubclass(PelicanStyle, BaseStyle):
                 raise TypeError()
             kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
-            style = PelicanStyle(**kwargs)
+            style = get_style_class(PelicanStyle,decorate_tags)(**kwargs)
         except ImportError as e:
             logger.warn(str(e))
             logger.warn('pybtex_plugins.PelicanStyle not found, using Pybtex plain style')
@@ -132,7 +139,12 @@ def add_publications(generator):
         bib_buf = StringIO()
         bibdata_this = BibliographyData(entries={key: entry})
         Writer().write_stream(bibdata_this, bib_buf)
+
+        # convert decorated tags (`decorate_tags` method for style)
+        # `<:bib-xyz>abc</:bib-xyz>` => `<span class="bib-xyz">abc</span>`
         text = formatted_entry.text.render(html_backend)
+        text = regex.sub(r'<:([^>]*)>',r'<span class="\1">',text)
+        text = regex.sub(r'</:([^>]*)>',r'</span>',text)
 
         entry_tuple = {'key': key,
                        'year': year,
