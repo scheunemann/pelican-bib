@@ -1,19 +1,19 @@
 from pybtex.style.template import tag
 from pybtex.database import Person
 
-def get_style_class(cls,decorate_tags):
+def get_style_class(cls,decorate_html):
     """
     Overrides `format_*` methods and surrounds the result with a
-    format-method-specific tag, e.g 
+    format-method-specific html tag, e.g 
         `format_names(abc)` will result in `<:bib-names>abc</:bib-names>`
     Attention: These tags need to be updated later, e.g. 
         `<:bib-xyz>abc</:bib-xyz>` => `<span class="bib-xyz">abc</span>`
     """
 
-    if not decorate_tags:
+    if not decorate_html:
         return cls
 
-    class TagDecorator(cls):
+    class HtmlDecorator(cls):
 
         def format_names(self, role, as_sentence=True): 
             return tag(':bib-names') [ super().format_names(role, as_sentence) ]
@@ -96,4 +96,4 @@ def get_style_class(cls,decorate_tags):
         def format_eprint(self, e): 
             return tag(':bib-eprint') [ super().format_eprint(e) ]
 
-    return TagDecorator
+    return HtmlDecorator
