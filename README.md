@@ -8,11 +8,13 @@ Organize your scientific publications with BibTeX in Pelican. The package is bas
 
     pip install pybtex
 
-## Using pip
+You can either install Pelican Bib using _pip_ or as a _submodule_:
+
+### Using pip
 
     pip install pelican-bib
 
-Add the plugin to the `PLUGINS` variable:
+Add the plugin to the `PLUGINS` variable (in your Pelican config, e.g. `pelicanconf.py`):
 
     PLUGINS = ['pelican_bib', ...]
 
@@ -23,7 +25,7 @@ In your Pelican site:
     $ mkdir plugins
     $ git submodule add https://github.com/scheunemann/pelican-bib plugins/pelican-bib
 
-And Pelican config:
+Register the plugin folder and add the plugin to the `PLUGINS` variable (in your Pelican config, e.g. `pelicanconf.py`):
 
     PLUGIN_PATHS = ['plugins/pelican-bib', ...]
     PLUGINS = ['pelican_bib', ...]
