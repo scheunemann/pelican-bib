@@ -47,6 +47,7 @@ from pelican import signals
 from jinja2 import Template
 from docutils.parsers.rst import directives, Directive
 from docutils import nodes, utils
+from ast import literal_eval
 
 from .tagdecorator import *
 
@@ -214,20 +215,25 @@ class Bibliography(Directive):
         (optional, default is `bibliography`)
     """
     required_arguments = 1
-    optional_arguments = 1
+    optional_arguments = 0
     final_argument_whitespace = False
+    option_spec = {
+        'template': directives.unchanged,
+        'options': directives.unchanged
+    }
     has_content = False
 
     def run(self):
 
-        default_template = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
+        template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
+        template_options = {}
 
         # get (required) arguments
         refs_file = directives.path(self.arguments[0])
-        try:
-            template_name = directives.unchanged_required(self.arguments[1])
-        except:
-            template_name = default_template
+        if 'template' in self.options:
+            template_name = self.options['template']
+        if 'options' in self.options:
+            template_options = literal_eval(self.options['options'])
 
         # determine actual absolute path to BibTeX file
         if refs_file.startswith('/') or refs_file.startswith(os.sep):
@@ -244,6 +250,7 @@ class Bibliography(Directive):
 
         # create a copy of generator context & add publications
         generator_context = current_generator.context.copy()
+        generator_context.update(template_options)
         add_publications_to_context(current_generator,generator_context,refs_file)
 
         # find template & generate HTML
