@@ -28,6 +28,11 @@ generator.settings['PUBLICATIONS_DECORATE_HTML']:
     If set to True, elements of a publication entry (e.g. names, title)
     will be decorated with a <span> tag with a specific class name
 
+generator.settings['PUBLICATIONS_DEFAULT_TEMPLATE']:
+    The name of the template used as default if there is no
+    template name argument present in the `bibliography` directive.
+    `bibliography` if no value provided.
+
 """
 # Author: Vlad Niculae <vlad@vene.ro>
 # Unlicense (see UNLICENSE for details)
@@ -215,9 +220,14 @@ class Bibliography(Directive):
 
     def run(self):
 
+        default_template = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
+
         # get (required) arguments
         refs_file = directives.path(self.arguments[0])
-        template_name = directives.unchanged_required(self.arguments[1]) if self.arguments[1:] else 'bibliography'
+        try:
+            template_name = directives.unchanged_required(self.arguments[1])
+        except:
+            template_name = default_template
 
         # determine actual absolute path to BibTeX file
         if refs_file.startswith('/') or refs_file.startswith(os.sep):
