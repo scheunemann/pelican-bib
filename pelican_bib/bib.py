@@ -96,13 +96,13 @@ def add_publications_to_context(generator,generator_context,refs_file):
     import sys
     sys.path.append(plugin_path)
 
-    style = get_style_class(plain.Style,decorate_html)()
+    kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
+    style = get_style_class(plain.Style,decorate_html)(**kwargs)
     if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
         try:
             from pybtex_plugins import PelicanStyle
             if not isinstance(PelicanStyle, type) or not issubclass(PelicanStyle, BaseStyle):
                 raise TypeError()
-            kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
             style = get_style_class(PelicanStyle,decorate_html)(**kwargs)
         except ImportError as e:
             logger.warn(str(e))
