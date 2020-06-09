@@ -19,7 +19,7 @@ def get_style_class(cls,decorate_html):
             return tag(':bib-names') [ super().format_names(role, as_sentence) ]
 
         def format_article(self, e): 
-            return tag(':bib-article') [ super()._format_article(e) ]
+            return tag(':bib-article') [ super().format_article(e) ]
 
         def format_author_or_editor(self, e): 
             return tag(':bib-author_or_editor') [ super().format_author_or_editor(e) ]
