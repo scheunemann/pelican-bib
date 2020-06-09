@@ -201,10 +201,14 @@ class Bibliography(Directive):
 
     Usage:
         .. bibliography:: PUBLICATIONS_SRC
-        .. bibliography:: PUBLICATIONS_SRC TEMPLATE_NAME
+          :template: TEMPLATE_NAME
+          :options: TEMPLATE_OPTIONS_DICT
+          :class: CLASS_NAME
     e.g.
         .. bibliography:: osm.bib
-        .. bibliography:: osm.bib publications_by_year
+          :template: publications_unsrt
+          :options: { 'groupby_value': year }
+          :class: my-bib
 
     PUBLICATIONS_SRC
         Local path to the BibTeX file to read
@@ -213,13 +217,22 @@ class Bibliography(Directive):
     TEMPLATE_NAME
         Name of the template used for rendering the bibliography.
         (optional, default is `bibliography`)
+
+    TEMPLATE_OPTIONS_DICT
+        A dictionary whose contents are added to the generator context.
+        (optional, accessible in the template)
+
+    CLASS_NAME
+        Name of the class attribute of the container.
+        (optional, default is `bibliography`)
     """
     required_arguments = 1
     optional_arguments = 0
     final_argument_whitespace = False
     option_spec = {
         'template': directives.unchanged,
-        'options': directives.unchanged
+        'options': directives.unchanged,
+        'class': directives.class_option
     }
     has_content = False
 
@@ -227,13 +240,16 @@ class Bibliography(Directive):
 
         template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
         template_options = {}
+        class_name = 'bibliography'
 
-        # get (required) arguments
+        # fetch arguments
         refs_file = directives.path(self.arguments[0])
         if 'template' in self.options:
             template_name = self.options['template']
         if 'options' in self.options:
             template_options = literal_eval(self.options['options'])
+        if 'class' in self.options:
+            class_name = self.options['class']
 
         # determine actual absolute path to BibTeX file
         if refs_file.startswith('/') or refs_file.startswith(os.sep):
@@ -257,8 +273,11 @@ class Bibliography(Directive):
         template = current_generator.get_template(template_name)
         html = template.render(generator_context)
         
-        node = nodes.raw('', html, format='html')
-        return [ node ]
+        # return container with HTML content
+        node = nodes.raw(text = html, format='html')
+        container = nodes.container(classes = [ class_name ])
+        container.append(node)
+        return [ container ]
 
 
 def generator_preread(generator):
