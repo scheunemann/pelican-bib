@@ -232,7 +232,8 @@ class Bibliography(Directive):
     option_spec = {
         'template': directives.unchanged,
         'options': directives.unchanged,
-        'class': directives.class_option
+        'class': directives.class_option,
+        'filter-tag': directives.unchanged
     }
     has_content = False
 
@@ -241,6 +242,7 @@ class Bibliography(Directive):
         template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
         template_options = {}
         class_name = 'bibliography'
+        filter_tag = None
 
         # fetch arguments
         refs_file = directives.path(self.arguments[0])
@@ -250,6 +252,8 @@ class Bibliography(Directive):
             template_options = literal_eval(self.options['options'])
         if 'class' in self.options:
             class_name = self.options['class']
+        if 'filter-tag' in self.options:
+            filter_tag = self.options['filter-tag']
 
         # determine actual absolute path to BibTeX file
         if refs_file.startswith('/') or refs_file.startswith(os.sep):
@@ -268,6 +272,10 @@ class Bibliography(Directive):
         generator_context = current_generator.context.copy()
         generator_context.update(template_options)
         add_publications_to_context(current_generator,generator_context,refs_file)
+
+        #
+        if filter_tag:
+            generator_context['publications'] = generator_context['publications_lists'][filter_tag]
 
         # find template & generate HTML
         template = current_generator.get_template(template_name)
