@@ -9,37 +9,48 @@ citations, loaded from a BibTeX file at a configurable path.
 
 The use case for now is to generate a ``Publications'' page for academic
 websites.
+
+Configuration
+-------------
+generator.settings['PUBLICATIONS_SRC']:
+    Local path to the BibTeX file to read.
+    Each generator contains this list of publications.
+
+generator.settings['PUBLICATIONS_SPLIT_BY']:
+    The name of the bibtex field used for splitting the publications.
+    No splitting if title is not provided.
+
+generator.settings['PUBLICATIONS_UNTAGGED_TITLE']:
+    The title of the header for all untagged entries.
+    No such list if title is not provided.
+
+generator.settings['PUBLICATIONS_DECORATE_HTML']:
+    If set to True, elements of a publication entry (e.g. names, title)
+    will be decorated with a <span> tag with a specific class name
+
 """
 # Author: Vlad Niculae <vlad@vene.ro>
 # Unlicense (see UNLICENSE for details)
 
 import logging
 logger = logging.getLogger(__name__)
+
+import os
 import re as regex
+
 from pelican import signals
+from jinja2 import Template
+from docutils.parsers.rst import directives, Directive
+from docutils import nodes, utils
+
 from .tagdecorator import *
 
 
-def add_publications(generator):
-    """
-    Populates context with a list of BibTeX publications.
+def generator_init(generator):
+    """ Populates context with a list of BibTeX publications.
 
-    Configuration
-    -------------
     generator.settings['PUBLICATIONS_SRC']:
         Local path to the BibTeX file to read.
-
-    generator.settings['PUBLICATIONS_SPLIT_BY']:
-        The name of the bibtex field used for splitting the publications.
-        No splitting if title is not provided.
-
-    generator.settings['PUBLICATIONS_UNTAGGED_TITLE']:
-        The title of the header for all untagged entries.
-        No such list if title is not provided.
-
-    generator.settings['PUBLICATIONS_DECORATE_HTML']:
-        If set to True, elements of a publication entry (e.g. names, title)
-        will be decorated with a <span> tag with a specific class name
 
     Output
     ------
@@ -53,8 +64,13 @@ def add_publications(generator):
         (key, year, text, bibtex, pdf, slides, poster).
         See Readme.md for more details.
     """
-    if 'PUBLICATIONS_SRC' not in generator.settings:
-        return
+    if 'PUBLICATIONS_SRC'in generator.settings:
+        refs_file = generator.settings['PUBLICATIONS_SRC']
+        add_publications_to_context(generator,generator.context,refs_file)
+
+
+def add_publications_to_context(generator,generator_context,refs_file):
+    """ Populates context with a list of BibTeX publications. """
     try:
         from StringIO import StringIO
     except ImportError:
@@ -90,7 +106,6 @@ def add_publications(generator):
             logger.warn('PelicanStyle must be a subclass of pybtex.style.formatting.BaseStyle')
 
 
-    refs_file = generator.settings['PUBLICATIONS_SRC']
     try:
         bibdata_all = Parser().parse_file(refs_file)
     except PybtexError as e:
@@ -168,10 +183,77 @@ def add_publications(generator):
 
 
     # output
-    generator.context['publications'] = publications
-    generator.context['publications_lists'] = publications_lists
+    generator_context['publications'] = publications
+    generator_context['publications_lists'] = publications_lists
 
+
+current_generator = None
+
+class Bibliography(Directive):
+    """ 
+    Directive to embed bibliographies into articles/posts.
+
+    Usage:
+        .. bibliography:: PUBLICATIONS_SRC
+        .. bibliography:: PUBLICATIONS_SRC TEMPLATE_NAME
+    e.g.
+        .. bibliography:: osm.bib
+        .. bibliography:: osm.bib publications_by_year
+
+    PUBLICATIONS_SRC
+        Local path to the BibTeX file to read
+        (required)
+
+    TEMPLATE_NAME
+        Name of the template used for rendering the bibliography.
+        (optional, default is `bibliography`)
+    """
+    required_arguments = 1
+    optional_arguments = 1
+    final_argument_whitespace = False
+    has_content = False
+
+    def run(self):
+
+        # get (required) arguments
+        refs_file = directives.path(self.arguments[0])
+        template_name = directives.unchanged_required(self.arguments[1]) if self.arguments[1:] else 'bibliography'
+
+        # determine actual absolute path to BibTeX file
+        if refs_file.startswith('/') or refs_file.startswith(os.sep):
+            # absolute path => relative to Pelican working directory
+            refs_file = os.path.join(current_generator.path, refs_file[1:])
+        else:
+            # relative path => relative to directory of 
+            # source file using the directive
+            source,line = self.state_machine.get_source_and_line(self.lineno)
+            source_dir = os.path.dirname(os.path.abspath(source))
+            refs_file = os.path.join(source_dir, refs_file)
+        refs_file = nodes.reprunicode(refs_file)
+        refs_file = os.path.abspath(refs_file)
+
+        # create a copy of generator context & add publications
+        generator_context = current_generator.context.copy()
+        add_publications_to_context(current_generator,generator_context,refs_file)
+
+        # find template & generate HTML
+        template = current_generator.get_template(template_name)
+        html = template.render(generator_context)
+        
+        node = nodes.raw('', html, format='html')
+        return [ node ]
+
+
+def generator_preread(generator):
+    global current_generator
+    current_generator = generator
 
 
 def register():
-    signals.generator_init.connect(add_publications)
+    signals.generator_init.connect(generator_init)
+
+    signals.article_generator_preread.connect(generator_preread)
+    signals.page_generator_preread.connect(generator_preread)
+    signals.static_generator_preread.connect(generator_preread)
+
+    directives.register_directive('bibliography', Bibliography)
