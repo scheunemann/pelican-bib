@@ -2,6 +2,7 @@
 
 Organize your scientific publications with BibTeX in Pelican. The package is based on Vlad's [pelican-bibtex](https://github.com/vene/pelican-bibtex). The current version is backward compatible and can replace the `pelican-bibtex` install of your current project.
 
+
 ## Installation
 
 `pelican_bib` requires `pybtex`.
@@ -10,9 +11,9 @@ Organize your scientific publications with BibTeX in Pelican. The package is bas
 $ pip install pybtex
 ```
 
-You can either install Pelican Bib using _pip_ or as a _submodule_:
+You can either install Pelican Bib using _pip_ or _as a submodule_:
 
-### Using pip
+### Option 1: Using pip
 
 ```console
 $ pip install pelican-bib
@@ -24,7 +25,7 @@ Add the plugin to the `PLUGINS` variable (in your Pelican config, e.g. `pelicanc
 PLUGINS = ['pelican_bib', ...]
 ```
 
-### As a Submodule
+### Option 2: As a Submodule
 
 In your Pelican site:
 
@@ -39,21 +40,79 @@ Register the plugin folder and add the plugin to the `PLUGINS` variable (in your
 PLUGIN_PATHS = ['plugins/pelican-bib', ...]
 PLUGINS = ['pelican_bib', ...]
 ```
-    
+
+
 ## How to Use
 
 This plugin reads a user-specified BibTeX file and populates the context with
 a list of publications, ready to be used in your Jinja2 template.
 
-Configuration is simply:
+Configuration is simply: You can embed a list of publications _via directive_ 
+or a _page template_.
+
+### Option 1: Directive "bibliography"
+
+Use the `bibliography` directive in your reST files and pass the path to the bibliography file
+(relative to current document or absolute to Pelican content path)
+
+```rst
+.. bibliography:: pubs.bib
+.. bibliography:: /pages/publications/pubs.bib
+```
+
+You will be able to find the `publications` variable your template.
+By default, a template with the name "bibliography" is rendered.
+Place the following template file as `bibliography.html` in your Pelican template folder 
+(e.g. `content/templates`):
+
+```jinja
+<ul>
+    {% for publication in publications %}
+      <li id="{{ publication.key }}">{{ publication.text }}</li>
+    {% endfor %}
+</ul>
+```
+
+Alternatively, you can pass a template name via `:template:` parameter to use a specific template file (e.g. "publications-by-year.html"):
+
+```rst
+.. bibliography:: pubs.bib
+   :template: publications-by-year
+```
+
+### Option 2: Page template
+
+If you set the parameter `PUBLICATIONS_SRC` in your Pelican configuration file (e.g. `pelicanconf.py`)
 
 ```python
 PUBLICATIONS_SRC = 'content/pubs.bib'
 ```
 
+you will be able to find the `publications` variable in _all_ your Jinja2 templates.
 
-If the file is present and readable, you will be able to find the `publications`
-variable in all templates.  It is a list of dictionaries with the following keys:
+To generate a page displaying the publications with one of the methods below, you need to add a template file and a page.
+
+1.) place the template file as `publications.html` in your Pelican template folder 
+(e.g. `content/templates` and add it as direct template to your webpage. 
+Add in your `pelicanconf.py`:
+
+```python
+THEME_TEMPLATES_OVERRIDES.append('templates')
+```
+
+2.) Create a page in your page folder, e.g., 'content/pages/publications.rst' with the following metadata in your content:
+
+```rst
+Publications
+############
+
+:template: publications
+```
+
+
+## Templating
+
+The  `publications` variable in your Jinja2 templates is a list of dictionaries with the following keys:
 
 1. `key` is the BibTeX key (identifier) of the entry.
 2. `year` is the year when the entry was published.  Useful for grouping by year in templates using Jinja's `groupby`
@@ -71,7 +130,6 @@ for example:
     slides = {/slides/foo13.html}
 }
 ```
-
 
 This plugin will take all defined fields and make them available in the template.
 If a field is not defined, the tuple field will be `None`.  Furthermore, the
@@ -183,25 +241,6 @@ class PelicanStyle(unsrt.Style):
 `PelicanStyle` must be a subclass of `pybtex.style.formatting.BaseStyle`. An
 alternative path to the `pybtex_plugins.py` file can be provided via
 `PUBLICATIONS_PLUGIN_PATH` in the Pelican config.
-
-## Page with a list of publications
-
-To generate a page displaying the publications with one of the methods below, you need to add a template file and a page.
-
-1.) place the template file as `publications.html` in `content/templates` and add it as direct template to your webpage. Add in your `pelicanconf.py`:
-
-```python
-THEME_TEMPLATES_OVERRIDES.append('templates')
-```
-
-2.) Create a page in your page folder, e.g., 'content/pages/publications.rst' with the following metadata in your content:
-
-```rst
-Publications
-############
-
-:template: publications
-```
 
 
 ## Example templates
