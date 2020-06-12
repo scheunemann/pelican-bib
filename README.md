@@ -174,7 +174,7 @@ the rendered HTML would look like this:
 </span>
 ```
 
-Available CSS classes are (according to the `format_*` function names of 
+Available CSS classes are (according to the `format_*` and `get_*_template` function names of 
 [pybtex.style.formatting.unsrt](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/unsrt.py)):
 
 _bib-names_, 
@@ -205,7 +205,7 @@ _bib-pubmed_,
 _bib-doi_, 
 _bib-eprint_.
 
-You can use the `class` option of the `bibliography` directive to change the class attribute name of the publication list's container. E.e.
+You can use the `class` option of the `bibliography` directive to change the class attribute name of the publication list's container. E.g.
 
 ```rst
 .. bibliography:: pubs.bib
@@ -243,14 +243,14 @@ or just use the predifined options:
 ```rst
 .. bibliography:: pubs.bib
    :sorting_style: author_year_title
-   :abbreviate_names': True
+   :abbreviate_names: True
    :name_style: lastfirst
 ```
 
 ### Split into lists of publications
 
-You can add an extra field to each bibtex entry. This value of that field is a comma seperated list.
-These values will become the keys of a list `publications_lists` containing the associated bibtex entries in your template.
+You can add an extra field to each BibTeX entry. This value of that field is a comma separated list.
+These values will become the keys of a list `publications_lists` containing the associated BibTeX entries in your template.
 
 For example, if you want to associate an entry with two different tags (`foo-tag`, `bar-tag`), 
 you add the following field to the bib entry:
@@ -347,7 +347,7 @@ Variant A - Open BibTeX entry via JavaScript in new windows:
 _(Note: that we are escaping the BibTeX string twice in order to properly display it. 
 This can be achieved using `forceescape`)_
 
-Variant B - Show/hide BibTex entry in-place via CSS:
+Variant B - Show/hide BibTeX entry in-place via CSS:
 
 ```jinja
 {% macro render_publication(publication) %}
@@ -480,7 +480,7 @@ No grouping:
  ```
 
 If the parameter `groupby_attribute` is passed to the template, the list of publications will be grouped by this attribute.
-Otherwise, the plain list will shown. 
+Otherwise, the plain list will shown:
 
 ```jinja
 {% if groupby_attribute %}
