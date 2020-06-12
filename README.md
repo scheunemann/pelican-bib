@@ -63,7 +63,7 @@ Use the `bibliography` directive in your reST files and pass the path to the bib
 You will be able to find the `publications` variable your template.
 By default, a template with the name "bibliography" is rendered.
 Place the following template file as `bibliography.html` in your Pelican template folder 
-(e.g. `content/templates`):
+(e.g. `content/templates`). For extended templates see [example templates](#example-templates).
 
 ```jinja
 <ul>
@@ -145,7 +145,7 @@ For example
     :options: { 'groupby_attribute': 'year' }
  ```
 
-would make the variable `groupby_attribute` available in the template (see [example templates](#example-templates)).
+would make the variable `groupby_attribute` available in the template (see [example templates](#using-additional-parameters-bibliography-directive)).
 
 ### Add CSS classes to entry parts
 
@@ -326,6 +326,24 @@ alternative path to the `pybtex_plugins.py` file can be provided via
 
 ## Example templates
 
+First, create a macro in your template file with the following content:
+
+```jinja
+{% macro render_publication(publication) %}
+    <li id="{{ publication.key }}">
+        {{ publication.text }}
+        [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
+        {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
+            {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
+        {% endfor %}
+    </li>
+{% endmacro  %}
+```
+_(Note: that we are escaping the BibTeX string twice in order to properly display it. 
+This can be achieved using `forceescape`)_
+
+Then, add the following content (to the same file).
+
 Example content of the `bibliography.html` template (**Option 1: Directive "bibliography"**):
 
 ```jinja
@@ -340,32 +358,38 @@ Example content of the `bibliography.html` template (**Option 1: Directive "bibl
         doc.close();
     }
 </script>
-<section id="content" class="body">
-    <h1 class="entry-title">Publications</h1>
-    <ul>
-        {% for publication in publications %}
-            <li id="{{ publication.key }}">{{ publication.text }}
-            [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-            {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-            {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-            {% endfor %}
-            </li>
-        {% endfor %}
-    </ul>
-</section>
-```
-_(Note: that we are escaping the BibTeX string twice in order to properly display it. 
-This can be achieved using `forceescape`)_
 
-Example content of the `publications.html` template (**Option 2: Page template**). Surround the content above with:
+<ul>
+    {% for publication in publications %}
+        {{ render_publication(publication) }}
+    {% endfor %}
+</ul>
+```
+
+Example content of the `publications.html` template (**Option 2: Page template**):
 
 ```jinja
 {% extends "base.html" %}
 {% block title %}Publications{% endblock %}
 {% block content %}
-```
 
-```jinja
+<script type="text/javascript">
+    function disp(s) {
+        var win;
+        var doc;
+        win = window.open("", "WINDOWID");
+        doc = win.document;
+        doc.open("text/plain");
+        doc.write("<pre>" + s + "</pre>");
+        doc.close();
+    }
+</script>
+<section id="content" class="body">
+    <h1 class="entry-title">Publications</h1>
+    <ul>
+        {{ render_publication(publication) }}
+    </ul>
+</section>
 {% endblock %}
 ```
 
@@ -375,14 +399,9 @@ The entries can be sorted by one of the attributes, for example, if you want to 
 
 ```jinja
 <ul>
-    {% for publication in publications|sort(True, attribute='year') %}
-        <li id="{{ publication.key }}">{{ publication.text }}
-        [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-        {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-        {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-        {% endfor %}
-        </li>
-    {% endfor %}
+{% for publication in publications|sort(True, attribute='year') %}
+    {{ render_publication(publication) }}
+{% endfor %}
 </ul>
 ```
 
@@ -396,16 +415,12 @@ To group entries by year,
 <ul>
     {% for grouper, publist in publications|groupby('year')|reverse %}
     <li> {{grouper}}
-    <ul>
-    {% for publication in publist %}
-        <li id="{{ publication.key }}">{{ publication.text }}
-        [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-        {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-        {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
+        <ul>
+        {% for publication in publist %}
+            {{ render_publication(publication) }}
         {% endfor %}
-        </li>
-    {% endfor %}
-    </ul></li>
+        </ul>
+    </li>
     {% endfor %}
 </ul>
 ```
@@ -419,22 +434,55 @@ You can also iterate over the map and present all bib entries of each list.
 The section of the previous example changes to:
 
 ```jinja
-<section id="content" class="body">
-    <h1 class="entry-title">Publications</h1>
-    {% for tag in publications_lists %}
-        {% if publications_lists|length > 1 %}
-            <h2>{{tag}}</h2>
-        {% endif %}
+{% for tag in publications_lists %}
+    {% if publications_lists|length > 1 %}
+        <h2>{{tag}}</h2>
+    {% endif %}
+        <ul>
+        {% for publication  in  publications_lists[tag] %}
+            {{ render_publication(publication) }}
+        {% endfor %}
+        </ul>
+{% endfor %}
+```
+
+### Using additional parameters ("bibliography" directive)
+
+Group by year:
+
+```rst
+ .. bibliography:: pubs.bib
+    :options: { 'groupby_attribute': 'year' }
+ ```
+
+No grouping: 
+
+```rst
+ .. bibliography:: pubs.bib
+ ```
+
+If the parameter `groupby_attribute` is passed to the template, the list of publications will be grouped by this attribute.
+Otherwise, the plain list will shown. 
+
+```jinja
+{% if groupby_attribute %}
+    {% for year_number, year_publications in publications|groupby(groupby_attribute)|reverse %}
+        <section id="{{ year_number }}">
+            <h2>
+                <a href="#{{ year_number }}">{{ year_number }}</a>
+            </h2>
             <ul>
-            {% for publication  in  publications_lists[tag] %}
-            <li id="{{ publication.bibkey }}">{{ publication.text }}
-            [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-            {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-                {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-            {% endfor %}
-            </li>
+            {% for publication in year_publications %}
+                {{ render_publication(publication) }}
             {% endfor %}
             </ul>
-        {% endfor %}
-</section>
+        </section>
+    {% endfor %}
+{% else %}
+    <ul>
+    {% for publication in publications %}
+        {{ render_publication(publication) }}
+    {% endfor %}
+    </ul>
+{% endif %}
 ```
