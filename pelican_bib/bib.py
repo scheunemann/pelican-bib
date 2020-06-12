@@ -176,6 +176,7 @@ def add_publications_to_context(generator,generator_context,refs_file,pybtex_sty
                        'pdf': pdf,
                        'slides': slides,
                        'poster': poster}
+        entry_tuple.update(entry.fields)
 
         publications.append(entry_tuple)
 
