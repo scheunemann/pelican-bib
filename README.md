@@ -332,8 +332,11 @@ First, create a macro in your template file with the following content:
 {% macro render_publication(publication) %}
     <li id="{{ publication.key }}">
         {{ publication.text }}
-        [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-        {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
+        [&nbsp;<a href="javascript:window.open().document.write('<pre>{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}</pre>');">Bibtex</a>&nbsp;]
+        {% for label, target in [
+            ('PDF', publication.pdf),
+            ('Slides', publication.slides),
+            ('Poster', publication.poster)] %}
             {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
         {% endfor %}
     </li>
@@ -344,21 +347,9 @@ This can be achieved using `forceescape`)_
 
 Then, add the following content (to the same file).
 
-Example content of the `bibliography.html` template (**Option 1: Directive "bibliography"**):
+Example content of the `bibliography.html` template (Option 1: **Directive "bibliography"**):
 
 ```jinja
-<script type="text/javascript">
-    function disp(s) {
-        var win;
-        var doc;
-        win = window.open("", "WINDOWID");
-        doc = win.document;
-        doc.open("text/plain");
-        doc.write("<pre>" + s + "</pre>");
-        doc.close();
-    }
-</script>
-
 <ul>
     {% for publication in publications %}
         {{ render_publication(publication) }}
@@ -366,24 +357,13 @@ Example content of the `bibliography.html` template (**Option 1: Directive "bibl
 </ul>
 ```
 
-Example content of the `publications.html` template (**Option 2: Page template**):
+Example content of the `publications.html` template (Option 2: **Page template**):
 
 ```jinja
 {% extends "base.html" %}
 {% block title %}Publications{% endblock %}
 {% block content %}
 
-<script type="text/javascript">
-    function disp(s) {
-        var win;
-        var doc;
-        win = window.open("", "WINDOWID");
-        doc = win.document;
-        doc.open("text/plain");
-        doc.write("<pre>" + s + "</pre>");
-        doc.close();
-    }
-</script>
 <section id="content" class="body">
     <h1 class="entry-title">Publications</h1>
     <ul>
