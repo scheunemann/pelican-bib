@@ -75,7 +75,7 @@ def generator_init(generator):
         add_publications_to_context(generator,generator.context,refs_file)
 
 
-def add_publications_to_context(generator,generator_context,refs_file):
+def add_publications_to_context(generator,generator_context,refs_file,pybtex_style_args = {}):
     """ Populates context with a list of BibTeX publications. """
     try:
         from StringIO import StringIO
@@ -98,7 +98,9 @@ def add_publications_to_context(generator,generator_context,refs_file):
     sys.path.append(plugin_path)
 
     kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
+    kwargs.update(pybtex_style_args)
     style = get_style_class(plain.Style,decorate_html)(**kwargs)
+
     if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
         try:
             from pybtex_plugins import PelicanStyle
@@ -201,41 +203,44 @@ class Bibliography(Directive):
 
     Usage:
         .. bibliography:: PUBLICATIONS_SRC
-          :template: TEMPLATE_NAME
-          :options: TEMPLATE_OPTIONS_DICT
-          :class: CLASS_NAME
+          :template: TEMPLATE_NAME (optional)
+          :options: TEMPLATE_OPTIONS_DICT (optional)
+          :class: CLASS_NAME (optional)
+          :filter_tag: FILTER_TAG (optional)
+          :pybtex_style_args: PYBTEX_STYLE_ARGS (optional)
+          :sorting_style: PYBTEX_SORTING_STYLE (optional)
+          :abbreviate_names: PYBTEX_ABBREVIATE_NAMES (optional)
+          :name_style: PYBTEX_NAME_STYLE (optional)
+
     e.g.
         .. bibliography:: osm.bib
           :template: publications_unsrt
           :options: { 'groupby_value': year }
           :class: my-bib
-
-    PUBLICATIONS_SRC
-        Local path to the BibTeX file to read
-        (required)
-
-    TEMPLATE_NAME
-        Name of the template used for rendering the bibliography.
-        (optional, default is `bibliography`)
-
-    TEMPLATE_OPTIONS_DICT
-        A dictionary whose contents are added to the generator context.
-        (optional, accessible in the template)
-
-    CLASS_NAME
-        Name of the class attribute of the container.
-        (optional, default is `bibliography`)
+          :pybtex_style_args: { 'sorting_style': 'author_year_title', 'abbreviate_names': False, 'name_style': 'lastfirst' }
+          :sorting_style: author_year_title
+          :abbreviate_names: False
+          :name_style: lastfirst
     """
     required_arguments = 1
     optional_arguments = 0
     final_argument_whitespace = False
+    has_content = False
+
+    def boolean(argument):
+        if argument=='True': return True
+        if argument=='False': return False
+        raise ValueError('must be boolean')
     option_spec = {
         'template': directives.unchanged,
         'options': directives.unchanged,
         'class': directives.class_option,
-        'filter-tag': directives.unchanged
+        'filter_tag': directives.unchanged,
+        'pybtex_style_args': directives.unchanged,
+        'sorting_style': directives.unchanged,
+        'abbreviate_names': boolean,
+        'name_style': directives.unchanged
     }
-    has_content = False
 
     def run(self):
 
@@ -243,6 +248,7 @@ class Bibliography(Directive):
         template_options = {}
         class_name = 'bibliography'
         filter_tag = None
+        pybtex_style_args = {}
 
         # fetch arguments
         refs_file = directives.path(self.arguments[0])
@@ -252,8 +258,16 @@ class Bibliography(Directive):
             template_options = literal_eval(self.options['options'])
         if 'class' in self.options:
             class_name = self.options['class']
-        if 'filter-tag' in self.options:
-            filter_tag = self.options['filter-tag']
+        if 'filter_tag' in self.options:
+            filter_tag = self.options['filter_tag']
+        if 'pybtex_style_args' in self.options:
+            pybtex_style_args.update(literal_eval(self.options['pybtex_style_args']))
+        if 'sorting_style' in self.options:
+            pybtex_style_args['sorting_style'] = self.options['sorting_style']
+        if 'abbreviate_names' in self.options:
+            pybtex_style_args['abbreviate_names'] = self.options['abbreviate_names']
+        if 'name_style' in self.options:
+            pybtex_style_args['name_style'] = self.options['name_style']
 
         # determine actual absolute path to BibTeX file
         if refs_file.startswith('/') or refs_file.startswith(os.sep):
@@ -271,9 +285,9 @@ class Bibliography(Directive):
         # create a copy of generator context & add publications
         generator_context = current_generator.context.copy()
         generator_context.update(template_options)
-        add_publications_to_context(current_generator,generator_context,refs_file)
+        add_publications_to_context(current_generator,generator_context,refs_file,pybtex_style_args)
 
-        #
+        # if applicable, return only publications containing a specific tag
         if filter_tag:
             generator_context['publications'] = generator_context['publications_lists'][filter_tag]
 
