@@ -50,7 +50,7 @@ a list of publications, ready to be used in your Jinja2 template.
 Configuration is simply: You can embed a list of publications _via directive_ 
 or a _page template_.
 
-### Option 1: Directive "bibliography"
+### Option 1: "bibliography" directive
 
 Use the `bibliography` directive in your reST files and pass the path to the bibliography file
 (relative to current document or absolute to Pelican content path)
@@ -326,7 +326,9 @@ alternative path to the `pybtex_plugins.py` file can be provided via
 
 ## Example templates
 
-First, create a macro in your template file with the following content:
+First, add the following content to your template file.
+
+Variant A - Open BibTeX entry via JavaScript in new windows:
 
 ```jinja
 {% macro render_publication(publication) %}
@@ -345,9 +347,45 @@ First, create a macro in your template file with the following content:
 _(Note: that we are escaping the BibTeX string twice in order to properly display it. 
 This can be achieved using `forceescape`)_
 
+Variant B - Show/hide BibTex entry in-place via CSS:
+
+```jinja
+{% macro render_publication(publication) %}
+    <li id="{{ publication.key }}">
+        {{ publication.text }}
+        [
+        <a href="#{{ publication.key }}-bibtex">BibTeX</a>
+        {% for label, target in [
+            ('PDF', publication.pdf),
+            ('slides', publication.slides),
+            ('poster', publication.poster)] %}
+            {% if target %}
+            | <a href="{{ target }}">{{ label }}</a>
+            {% endif %}
+        {% endfor %}
+        ]
+        <div class="bib-fold" id="{{ publication.key }}-bibtex">
+            <a class="bib-close" href="#{{ publication.key }}">&times;</a>
+            <pre>{{
+            publication.bibtex
+            | trim
+            | escape
+            | replace('\n', '<br>')
+            }}</pre>
+        </div>
+    </li>
+{% endmacro  %}
+
+<style>
+    .bib-fold { display: none; }
+    .bib-fold:target { display: block; }
+    .bib-close { display: block; position: absolute; right: .2em; padding: .2em; margin-top: -.2em; margin-right: .5em; color: inherit; text-decoration: none; font-size: 3em; font-weight: bold; background-color: #fff; }
+</style>
+```
+
 Then, add the following content (to the same file).
 
-Example content of the `bibliography.html` template (Option 1: **Directive "bibliography"**):
+Example content of the `bibliography.html` template _(Option 1: "bibliography" directive)_:
 
 ```jinja
 <ul>
@@ -357,7 +395,7 @@ Example content of the `bibliography.html` template (Option 1: **Directive "bibl
 </ul>
 ```
 
-Example content of the `publications.html` template (Option 2: **Page template**):
+Example content of the `publications.html` template _(Option 2: Page template)_:
 
 ```jinja
 {% extends "base.html" %}
