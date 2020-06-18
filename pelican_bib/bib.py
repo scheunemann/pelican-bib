@@ -247,7 +247,7 @@ class Bibliography(Directive):
 
         template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
         template_options = {}
-        class_name = 'bibliography'
+        classes = [ 'bibliography', os.path.basename(self.arguments[0]) ]
         filter_tag = None
         pybtex_style_args = {}
 
@@ -258,7 +258,7 @@ class Bibliography(Directive):
         if 'options' in self.options:
             template_options = literal_eval(self.options['options'])
         if 'class' in self.options:
-            class_name = self.options['class']
+            classes = self.options['class']
         if 'filter_tag' in self.options:
             filter_tag = self.options['filter_tag']
         if 'pybtex_style_args' in self.options:
@@ -298,7 +298,7 @@ class Bibliography(Directive):
         
         # return container with HTML content
         node = nodes.raw(text = html, format='html')
-        container = nodes.container(classes = [ class_name ])
+        container = nodes.container(classes = classes)
         container.append(node)
         return [ container ]
 

@@ -205,7 +205,7 @@ _bib-pubmed_,
 _bib-doi_, 
 _bib-eprint_.
 
-You can use the `class` option of the `bibliography` directive to change the class attribute name of the publication list's container. E.g.
+You can use the `class` option of the `bibliography` directive to change the class attribute name (default is "bibliography" and the bibliography file name) of the publication list's container. E.g.
 
 ```rst
 .. bibliography:: pubs.bib
