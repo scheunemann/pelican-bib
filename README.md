@@ -60,6 +60,19 @@ Use the `bibliography` directive in your reST files and pass the path to the bib
 .. bibliography:: /pages/publications/pubs.bib
 ```
 
+or provide BibTeX entries as content.
+
+```rst
+.. bibliography:: 
+
+  @inproceedings{doe_conf_2020,
+    author={Doe, Jane and Ordinary, Joe}, 
+    title={The Title of the Work},
+    booktitle={Proceedings of the Conference (CONF)},
+    year={2020}, pages={to appear}
+  }
+```
+
 You will be able to find the `publications` variable your template.
 By default, a template with the name "bibliography" is rendered.
 Place the following template file as `bibliography.html` in your Pelican template folder 

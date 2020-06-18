@@ -75,7 +75,7 @@ def generator_init(generator):
         add_publications_to_context(generator,generator.context,refs_file)
 
 
-def add_publications_to_context(generator,generator_context,refs_file,pybtex_style_args = {}):
+def add_publications_to_context(generator,generator_context,refs_file,refs_string = None,pybtex_style_args = {}):
     """ Populates context with a list of BibTeX publications. """
     try:
         from StringIO import StringIO
@@ -113,14 +113,10 @@ def add_publications_to_context(generator,generator_context,refs_file,pybtex_sty
         except TypeError:
             logger.warn('PelicanStyle must be a subclass of pybtex.style.formatting.BaseStyle')
 
-
-    try:
+    if refs_string:
+        bibdata_all = Parser().parse_string(refs_string)
+    else:
         bibdata_all = Parser().parse_file(refs_file)
-    except PybtexError as e:
-        logger.warn('`pelican_bib` failed to parse file %s: %s' % (
-            refs_file,
-            str(e)))
-        return
 
     publications = []
     publications_lists = {}
@@ -223,10 +219,10 @@ class Bibliography(Directive):
           :abbreviate_names: False
           :name_style: lastfirst
     """
-    required_arguments = 1
-    optional_arguments = 0
+    required_arguments = 0
+    optional_arguments = 1
     final_argument_whitespace = False
-    has_content = False
+    has_content = True
 
     def boolean(argument):
         if argument=='True': return True
@@ -245,14 +241,17 @@ class Bibliography(Directive):
 
     def run(self):
 
+        refs_file = None
         template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
         template_options = {}
-        classes = [ 'bibliography', os.path.basename(self.arguments[0]) ]
+        classes = [ 'bibliography' ]
         filter_tag = None
         pybtex_style_args = {}
 
         # fetch arguments
-        refs_file = directives.path(self.arguments[0])
+        if any(self.arguments):
+            refs_file = directives.path(self.arguments[0])
+            classes += os.path.basename(refs_file)
         if 'template' in self.options:
             template_name = self.options['template']
         if 'options' in self.options:
@@ -270,23 +269,32 @@ class Bibliography(Directive):
         if 'name_style' in self.options:
             pybtex_style_args['name_style'] = self.options['name_style']
 
-        # determine actual absolute path to BibTeX file
-        if refs_file.startswith('/') or refs_file.startswith(os.sep):
-            # absolute path => relative to Pelican working directory
-            refs_file = os.path.join(current_generator.path, refs_file[1:])
-        else:
-            # relative path => relative to directory of 
-            # source file using the directive
-            source,line = self.state_machine.get_source_and_line(self.lineno)
-            source_dir = os.path.dirname(os.path.abspath(source))
-            refs_file = os.path.join(source_dir, refs_file)
-        refs_file = nodes.reprunicode(refs_file)
-        refs_file = os.path.abspath(refs_file)
+        # BibTeX input is either a bib file or the directives content
+        if not self.content and not refs_file:
+            raise self.error('No BibTeX file path as first argument or BibTex content given.')
+        if self.content and refs_file:
+            raise self.error('Please provide either BibTeX file path or BibTex content.')
+
+        if refs_file:
+            # determine actual absolute path to BibTeX file
+            if refs_file.startswith('/') or refs_file.startswith(os.sep):
+                # absolute path => relative to Pelican working directory
+                refs_file = os.path.join(current_generator.path, refs_file[1:])
+            else:
+                # relative path => relative to directory of 
+                # source file using the directive
+                source,line = self.state_machine.get_source_and_line(self.lineno)
+                source_dir = os.path.dirname(os.path.abspath(source))
+                refs_file = os.path.join(source_dir, refs_file)
+            refs_file = nodes.reprunicode(refs_file)
+            refs_file = os.path.abspath(refs_file)
+
+        refs_string = '\n'.join(self.content)
 
         # create a copy of generator context & add publications
         generator_context = current_generator.context.copy()
         generator_context.update(template_options)
-        add_publications_to_context(current_generator,generator_context,refs_file,pybtex_style_args)
+        add_publications_to_context(current_generator, generator_context, refs_file, refs_string, pybtex_style_args)
 
         # if applicable, return only publications containing a specific tag
         if filter_tag:
