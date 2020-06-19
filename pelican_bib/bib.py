@@ -40,16 +40,15 @@ generator.settings['PUBLICATIONS_DEFAULT_TEMPLATE']:
 import logging
 logger = logging.getLogger(__name__)
 
-import os
-import re as regex
-
+from os import path
+from os import sep as path_separator
+from re import sub as replace
 from pelican import signals
 from jinja2 import Template
 from docutils.parsers.rst import directives, Directive
 from docutils import nodes, utils
 from ast import literal_eval
-
-from .tagdecorator import *
+from .htmldecorator import get_style_type
 
 
 def generator_init(generator):
@@ -72,10 +71,10 @@ def generator_init(generator):
     """
     if 'PUBLICATIONS_SRC'in generator.settings:
         refs_file = generator.settings['PUBLICATIONS_SRC']
-        add_publications_to_context(generator,generator.context,refs_file)
+        add_publications_to_context(generator, refs_file)
 
 
-def add_publications_to_context(generator,generator_context,refs_file,refs_string = None,pybtex_style_args = {}):
+def add_publications_to_context(generator, refs_file, refs_string=None, pybtex_style_args={}):
     """ Populates context with a list of BibTeX publications. """
     try:
         from StringIO import StringIO
@@ -99,14 +98,16 @@ def add_publications_to_context(generator,generator_context,refs_file,refs_strin
 
     kwargs = generator.settings.get('PUBLICATIONS_STYLE_ARGS', {})
     kwargs.update(pybtex_style_args)
-    style = get_style_class(plain.Style,decorate_html)(**kwargs)
+    style_type = get_style_type(plain.Style, decorate_html)
+    style = style_type(**kwargs)
 
     if generator.settings.get('PUBLICATIONS_CUSTOM_STYLE', False):
         try:
             from pybtex_plugins import PelicanStyle
             if not isinstance(PelicanStyle, type) or not issubclass(PelicanStyle, BaseStyle):
                 raise TypeError()
-            style = get_style_class(PelicanStyle,decorate_html)(**kwargs)
+            style_type = get_style_type(PelicanStyle, decorate_html)
+            style = style_type(**kwargs)
         except ImportError as e:
             logger.warn(str(e))
             logger.warn('pybtex_plugins.PelicanStyle not found, using Pybtex plain style')
@@ -162,8 +163,8 @@ def add_publications_to_context(generator,generator_context,refs_file,refs_strin
         # convert decorated html tags
         # `<:bib-xyz>abc</:bib-xyz>` => `<span class="bib-xyz">abc</span>`
         text = formatted_entry.text.render(html_backend)
-        text = regex.sub(r'<:([^>]*)>',r'<span class="\1">',text)
-        text = regex.sub(r'</:([^>]*)>',r'</span>',text)
+        text = replace(r'<:([^>]*)>', r'<span class="\1">', text)
+        text = replace(r'</:([^>]*)>', r'</span>', text)
 
         entry_tuple = {'key': key,
                        'year': year,
@@ -188,11 +189,9 @@ def add_publications_to_context(generator,generator_context,refs_file,refs_strin
 
 
     # output
-    generator_context['publications'] = publications
-    generator_context['publications_lists'] = publications_lists
+    generator.context['publications'] = publications
+    generator.context['publications_lists'] = publications_lists
 
-
-current_generator = None
 
 class Bibliography(Directive):
     """ 
@@ -224,6 +223,11 @@ class Bibliography(Directive):
     final_argument_whitespace = False
     has_content = True
 
+    generator = None
+
+    def set_generator(generator):
+        Bibliography.generator = generator
+
     def boolean(argument):
         if argument=='True': return True
         if argument=='False': return False
@@ -240,9 +244,9 @@ class Bibliography(Directive):
     }
 
     def run(self):
-
         refs_file = None
-        template_name = current_generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
+        refs_string = '\n'.join(self.content)
+        template_name = self.generator.settings.get('PUBLICATIONS_DEFAULT_TEMPLATE', 'bibliography')
         template_options = {}
         classes = [ 'bibliography' ]
         filter_tag = None
@@ -251,7 +255,7 @@ class Bibliography(Directive):
         # fetch arguments
         if any(self.arguments):
             refs_file = directives.path(self.arguments[0])
-            classes += os.path.basename(refs_file)
+            classes.append(path.basename(refs_file))
         if 'template' in self.options:
             template_name = self.options['template']
         if 'options' in self.options:
@@ -277,33 +281,37 @@ class Bibliography(Directive):
 
         if refs_file:
             # determine actual absolute path to BibTeX file
-            if refs_file.startswith('/') or refs_file.startswith(os.sep):
+            if refs_file.startswith('/') or refs_file.startswith(path_separator):
                 # absolute path => relative to Pelican working directory
-                refs_file = os.path.join(current_generator.path, refs_file[1:])
+                refs_file = path.join(self.generator.path, refs_file[1:])
             else:
                 # relative path => relative to directory of 
                 # source file using the directive
-                source,line = self.state_machine.get_source_and_line(self.lineno)
-                source_dir = os.path.dirname(os.path.abspath(source))
-                refs_file = os.path.join(source_dir, refs_file)
+                source, line = self.state_machine.get_source_and_line(self.lineno)
+                source_dir = path.dirname(path.abspath(source))
+                refs_file = path.join(source_dir, refs_file)
             refs_file = nodes.reprunicode(refs_file)
-            refs_file = os.path.abspath(refs_file)
+            refs_file = path.abspath(refs_file)
 
-        refs_string = '\n'.join(self.content)
+        # create a copy of generator context (don't mess up original context)
+        original_context = self.generator.context
+        self.generator.context = self.generator.context.copy()
 
-        # create a copy of generator context & add publications
-        generator_context = current_generator.context.copy()
-        generator_context.update(template_options)
-        add_publications_to_context(current_generator, generator_context, refs_file, refs_string, pybtex_style_args)
+        # add publications to generator.context
+        self.generator.context.update(template_options)
+        add_publications_to_context(self.generator, refs_file, refs_string, pybtex_style_args)
 
         # if applicable, return only publications containing a specific tag
         if filter_tag:
-            generator_context['publications'] = generator_context['publications_lists'][filter_tag]
+            self.generator.context['publications'] = self.generator.context['publications_lists'][filter_tag]
 
         # find template & generate HTML
-        template = current_generator.get_template(template_name)
-        html = template.render(generator_context)
-        
+        template = self.generator.get_template(template_name)
+        html = template.render(self.generator.context)
+
+        # restore original context
+        self.generator.context = original_context 
+
         # return container with HTML content
         node = nodes.raw(text = html, format='html')
         container = nodes.container(classes = classes)
@@ -311,16 +319,11 @@ class Bibliography(Directive):
         return [ container ]
 
 
-def generator_preread(generator):
-    global current_generator
-    current_generator = generator
-
-
 def register():
     signals.generator_init.connect(generator_init)
 
-    signals.article_generator_preread.connect(generator_preread)
-    signals.page_generator_preread.connect(generator_preread)
-    signals.static_generator_preread.connect(generator_preread)
+    signals.article_generator_preread.connect(Bibliography.set_generator)
+    signals.page_generator_preread.connect(Bibliography.set_generator)
+    signals.static_generator_preread.connect(Bibliography.set_generator)
 
     directives.register_directive('bibliography', Bibliography)

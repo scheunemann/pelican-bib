@@ -1,10 +1,10 @@
 from pybtex.style.template import tag
 from pybtex.database import Person
 
-def get_style_class(cls,decorate_html):
+def get_style_type(cls,decorate_html):
     """
-    Overrides `format_*` methods and surrounds the result with a
-    format-method-specific html tag, e.g 
+    Overrides `format_*` and `get_*_template` methods and surrounds the result 
+    with a format-method-specific html tag, e.g 
         `format_names(abc)` will result in `<:bib-names>abc</:bib-names>`
     Attention: These tags need to be updated later, e.g. 
         `<:bib-xyz>abc</:bib-xyz>` => `<span class="bib-xyz">abc</span>`
