@@ -286,20 +286,24 @@ class Bibliography(Directive):
         original_context = self.generator.context
         self.generator.context = self.generator.context.copy()
 
-        # add publications to generator.context
-        self.generator.context.update(template_options)
-        add_publications_to_context(self.generator, refs_files, refs_string, pybtex_style_args)
+        try:
+            # add publications to generator.context
+            self.generator.context.update(template_options)
+            add_publications_to_context(self.generator, refs_files, refs_string, pybtex_style_args)
 
-        # if applicable, return only publications containing a specific tag
-        if filter_tag:
-            self.generator.context['publications'] = self.generator.context['publications_lists'][filter_tag]
+            # if applicable, return only publications containing a specific tag
+            if filter_tag:
+                self.generator.context['publications'] = self.generator.context['publications_lists'][filter_tag]
 
-        # find template & generate HTML
-        template = self.generator.get_template(template_name)
-        html = template.render(self.generator.context)
+            # find template & generate HTML
+            template = self.generator.get_template(template_name)
+            html = template.render(self.generator.context)
 
-        # restore original context
-        self.generator.context = original_context 
+        except Exception as e:
+            raise self.error('Error rendering template `{}` ({}). '.format(template_name, e))
+        finally:
+            # restore original context
+            self.generator.context = original_context
 
         # return container with HTML content
         node = nodes.raw(text = html, format='html')
