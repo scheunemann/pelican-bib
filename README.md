@@ -52,15 +52,16 @@ or a _page template_.
 
 ### Option 1: "bibliography" directive
 
-Use the `bibliography` directive in your reST files and pass the path to the bibliography file
-(relative to current document or absolute to Pelican content path)
+Use the `bibliography` directive in your reST files and pass the path (or multiple paths)
+ to the bibliography file (relative to current document or absolute to Pelican content path).
 
 ```rst
 .. bibliography:: pubs.bib
 .. bibliography:: /pages/publications/pubs.bib
+.. bibliography:: pubs1.bib pubs2.bib pubs3.bib
 ```
 
-or provide BibTeX entries as content (you can combine both methods - entries will be merged).
+or provide BibTeX entries as content.
 
 ```rst
 .. bibliography:: 
@@ -72,6 +73,8 @@ or provide BibTeX entries as content (you can combine both methods - entries wil
     year={2020}, pages={to appear}
   }
 ```
+
+Both input methods (path\[s\] and content) can be combined - entries will then be merged.
 
 You will be able to find the `publications` variable your template.
 By default, a template with the name "bibliography" is rendered.
@@ -99,6 +102,7 @@ If you set the parameter `PUBLICATIONS_SRC` in your Pelican configuration file (
 
 ```python
 PUBLICATIONS_SRC = 'content/pubs.bib'
+PUBLICATIONS_SRC = ['content/pubs1.bib', 'content/pubs2.bib', 'content/pubs3.bib']
 ```
 
 you will be able to find the `publications` variable in _all_ your Jinja2 templates.
