@@ -114,10 +114,12 @@ def add_publications_to_context(generator, refs_file, refs_string=None, pybtex_s
         except TypeError:
             logger.warn('PelicanStyle must be a subclass of pybtex.style.formatting.BaseStyle')
 
+    # collect entries
+    bibdata_entries = {}
+    if refs_file:
+        bibdata_entries.update(Parser().parse_file(refs_file).entries)
     if refs_string:
-        bibdata_all = Parser().parse_string(refs_string)
-    else:
-        bibdata_all = Parser().parse_file(refs_file)
+        bibdata_entries.update(Parser().parse_string(refs_string).entries)
 
     publications = []
     publications_lists = {}
@@ -128,11 +130,11 @@ def add_publications_to_context(generator, refs_file, refs_string=None, pybtex_s
 
     # format entries
     html_backend = html.Backend()
-    formatted_entries = style.format_entries(bibdata_all.entries.values())
+    formatted_entries = style.format_entries(bibdata_entries.values())
 
     for formatted_entry in formatted_entries:
         key = formatted_entry.key
-        entry = bibdata_all.entries[key]
+        entry = bibdata_entries[key]
         year = entry.fields.get('year')
         # This shouldn't really stay in the field dict
         # but new versions of pybtex don't support pop
@@ -273,11 +275,9 @@ class Bibliography(Directive):
         if 'name_style' in self.options:
             pybtex_style_args['name_style'] = self.options['name_style']
 
-        # BibTeX input is either a bib file or the directives content
+        # BibTeX input is a bib file or the directives content
         if not self.content and not refs_file:
-            raise self.error('No BibTeX file path as first argument or BibTex content given.')
-        if self.content and refs_file:
-            raise self.error('Please provide either BibTeX file path or BibTex content.')
+            raise self.error('No BibTeX input source given.')
 
         if refs_file:
             # determine actual absolute path to BibTeX file

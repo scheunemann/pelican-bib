@@ -60,7 +60,7 @@ Use the `bibliography` directive in your reST files and pass the path to the bib
 .. bibliography:: /pages/publications/pubs.bib
 ```
 
-or provide BibTeX entries as content.
+or provide BibTeX entries as content (you can combine both methods - entries will be merged).
 
 ```rst
 .. bibliography:: 
