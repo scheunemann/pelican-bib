@@ -287,7 +287,7 @@ PUBLICATIONS_SPLIT_BY = 'tags'
 
 In your template you can then access these lists with the variables `publications_lists['foo-tag']` and `publications_lists['bar-tag']`.
 
-You can use the `filter-tags` option of the `bibliography` directive to only render publications containing the given tag:
+You can use the `filter_tag` option of the `bibliography` directive to only render publications containing the given tag:
 
 ```rst
 .. bibliography:: pubs.bib
