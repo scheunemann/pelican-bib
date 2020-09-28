@@ -291,7 +291,7 @@ You can use the `filter_tag` option of the `bibliography` directive to only rend
 
 ```rst
 .. bibliography:: pubs.bib
-   :filter-tag: foo-tag
+   :filter_tag: foo-tag
 ```
 
 If you want to assign all untagged entries (i.e. entries without 
