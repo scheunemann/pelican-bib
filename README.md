@@ -47,7 +47,7 @@ PLUGINS = ['pelican_bib', ...]
 This plugin reads a user-specified BibTeX file and populates the context with
 a list of publications, ready to be used in your Jinja2 template.
 
-Configuration is simply: You can embed a list of publications _via directive_ 
+Configuration is simply: You can embed a list of publications _via directive_
 or a _page template_.
 
 ### Option 1: "bibliography" directive
@@ -64,10 +64,10 @@ Use the `bibliography` directive in your reST files and pass the path (or multip
 or provide BibTeX entries as content.
 
 ```rst
-.. bibliography:: 
+.. bibliography::
 
   @inproceedings{doe_conf_2020,
-    author={Doe, Jane and Ordinary, Joe}, 
+    author={Doe, Jane and Ordinary, Joe},
     title={The Title of the Work},
     booktitle={Proceedings of the Conference (CONF)},
     year={2020}, pages={to appear}
@@ -76,9 +76,9 @@ or provide BibTeX entries as content.
 
 Both input methods (path\[s\] and content) can be combined - entries will then be merged.
 
-You will be able to find the `publications` variable your template.
+You will be able to use the variable `publications` in your template.
 By default, a template with the name "bibliography" is rendered.
-Place the following template file as `bibliography.html` in your Pelican template folder 
+Place the following template file as `bibliography.html` in your Pelican template folder
 (e.g. `content/templates`). For extended templates see [example templates](#example-templates).
 
 ```jinja
@@ -109,8 +109,8 @@ you will be able to find the `publications` variable in _all_ your Jinja2 templa
 
 To generate a page displaying the publications with one of the methods below, you need to add a template file and a page.
 
-1.) place the template file as `publications.html` in your Pelican template folder 
-(e.g. `content/templates` and add it as direct template to your webpage. 
+1.) place the template file as `publications.html` in your Pelican template folder
+(e.g. `content/templates` and add it as direct template to your webpage.
 Add in your `pelicanconf.py`:
 
 ```python
@@ -155,7 +155,7 @@ If a field mentioned above is not defined, the tuple field will be `None`.
 Other field types can only be accessed if they are also defined in the corresponding BibTeX entry.
 
 With the help of the `options` parameter of the `bibliography` directive, you can pass additional values to the template.
-For example 
+For example
 
  ```rst
  .. bibliography:: pubs.bib
@@ -184,45 +184,45 @@ the rendered HTML would look like this:
 
 ```html
 <span class="bib-inproceedings">
-  <span class="bib-names">Jane Doe, and Joe Ordinary.</span> 
+  <span class="bib-names">Jane Doe, and Joe Ordinary.</span>
   <span class="bib-title"><span class="bibtex-protected">The Title of the Work</span>.</span>
-  In <span class="bib-btitle"><em>Proceedings of the Conference (CONF)</em></span>, to appear. 
+  In <span class="bib-btitle"><em>Proceedings of the Conference (CONF)</em></span>, to appear.
   <span class="bib-address_organization_publisher_date">2020.</span>
 </span>
 ```
 
-Available CSS classes are (according to the `format_*` and `get_*_template` function names of 
+Available CSS classes are (according to the `format_*` and `get_*_template` function names of
 [pybtex.style.formatting.unsrt](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/unsrt.py)):
 
-_bib-names_, 
-_bib-article_, 
-_bib-author_or_editor_, 
-_bib-editor_, 
-_bib-volume_and_series_, 
-_bib-chapter_and_pages_, 
-_bib-edition_, 
-_bib-title_, 
-_bib-btitle_, 
-_bib-address_organization_publisher_date_, 
-_bib-book_, 
-_bib-booklet_, 
-_bib-inbook_, 
-_bib-incollection_, 
-_bib-inproceedings_, 
-_bib-manual_, 
-_bib-mastersthesis_, 
-_bib-misc_, 
-_bib-phdthesis_, 
-_bib-proceedings_, 
-_bib-techreport_, 
-_bib-unpublished_, 
-_bib-web_refs_, 
-_bib-url_, 
-_bib-pubmed_, 
-_bib-doi_, 
+_bib-names_,
+_bib-article_,
+_bib-author_or_editor_,
+_bib-editor_,
+_bib-volume_and_series_,
+_bib-chapter_and_pages_,
+_bib-edition_,
+_bib-title_,
+_bib-btitle_,
+_bib-address_organization_publisher_date_,
+_bib-book_,
+_bib-booklet_,
+_bib-inbook_,
+_bib-incollection_,
+_bib-inproceedings_,
+_bib-manual_,
+_bib-mastersthesis_,
+_bib-misc_,
+_bib-phdthesis_,
+_bib-proceedings_,
+_bib-techreport_,
+_bib-unpublished_,
+_bib-web_refs_,
+_bib-url_,
+_bib-pubmed_,
+_bib-doi_,
 _bib-eprint_.
 
-You can use the `class` option of the `bibliography` directive to change the class attribute name (default is "bibliography" and the bibliography file name) of the publication list's container. E.g.
+Each bibliography is wrapped in a `div`-container with the default classes "bibliography" and the bibliography file names. Use the `class` option of the `bibliography` directive to change the class attribute name:
 
 ```rst
 .. bibliography:: pubs.bib
@@ -232,14 +232,14 @@ You can use the `class` option of the `bibliography` directive to change the cla
 ### Style parameters for pybtex
 
 You can modify arguments passed to the pybtex style that is used for rendering HTML.
-Set the variable `PUBLICATIONS_STYLE_ARGS` in your `pelicanconf.py` to set default values 
+Set the variable `PUBLICATIONS_STYLE_ARGS` in your `pelicanconf.py` to set default values
 for the _named arguments_ passed to the used
-[pybtex style](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/__init__.py) 
+[pybtex style](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/__init__.py)
 ([available values](https://bitbucket.org/pybtex-devs/pybtex/src/master/setup.py)).
 
 ```python
-PUBLICATIONS_STYLE_ARGS = { 
-    'sorting_style': 'author_year_title', 
+PUBLICATIONS_STYLE_ARGS = {
+    'sorting_style': 'author_year_title',
     'abbreviate_names': True,
     'name_style': 'lastfirst' }
 ```
@@ -253,7 +253,7 @@ You can override the pybtex style arguments in a `bibliography` directive as fol
 
 or just use the predifined options:
 
-- `sorting_style`. values: `author_year_title` (default) or `none` (sorting exactly as in the bib file) 
+- `sorting_style`. values: `author_year_title` (default) or `none` (sorting exactly as in the bib file)
 - `abbreviate_names`. values: `True` or `False` (default)
 - `name_style`. values: `plain` (default) or `lastfirst`
 
@@ -269,7 +269,7 @@ or just use the predifined options:
 You can add an extra field to each BibTeX entry. This value of that field is a comma separated list.
 These values will become the keys of a list `publications_lists` containing the associated BibTeX entries in your template.
 
-For example, if you want to associate an entry with two different tags (`foo-tag`, `bar-tag`), 
+For example, if you want to associate an entry with two different tags (`foo-tag`, `bar-tag`),
 you add the following field to the bib entry:
 
 ```bib
@@ -294,8 +294,8 @@ You can use the `filter_tag` option of the `bibliography` directive to only rend
    :filter_tag: foo-tag
 ```
 
-If you want to assign all untagged entries (i.e. entries without 
-the field defined in `PUBLICATIONS_SPLIT_BY`) to a tag named `others`, set: 
+If you want to assign all untagged entries (i.e. entries without
+the field defined in `PUBLICATIONS_SPLIT_BY`) to a tag named `others`, set:
 
 ```python
 PUBLICATIONS_UNTAGGED_TITLE = 'others'
@@ -361,7 +361,7 @@ Variant A - Open BibTeX entry via JavaScript in new windows:
     </li>
 {% endmacro  %}
 ```
-_(Note: that we are escaping the BibTeX string twice in order to properly display it. 
+_(Note: that we are escaping the BibTeX string twice in order to properly display it.
 This can be achieved using `forceescape`)_
 
 Variant B - Show/hide BibTeX entry in-place via CSS:
@@ -440,7 +440,7 @@ The entries can be sorted by one of the attributes, for example, if you want to 
 </ul>
 ```
 
-The [sort builtin filter](http://jinja.pocoo.org/docs/2.10/templates/#sort) was added in version 2.6 of jinja2. 
+The [sort builtin filter](http://jinja.pocoo.org/docs/2.10/templates/#sort) was added in version 2.6 of jinja2.
 
 ### Grouping entries
 
@@ -463,7 +463,7 @@ To group entries by year,
 ### Using lists of publications
 
 As described above, lists of publications are stored in `publications_lists`.
-You can replace `publications` from the previous example with `publications_lists['foo-tag']` to only show the publications with tagged with `foo-tag`. 
+You can replace `publications` from the previous example with `publications_lists['foo-tag']` to only show the publications with tagged with `foo-tag`.
 
 You can also iterate over the map and present all bib entries of each list.
 The section of the previous example changes to:
@@ -490,7 +490,7 @@ Group by year:
     :options: { 'groupby_attribute': 'year' }
  ```
 
-No grouping: 
+No grouping:
 
 ```rst
  .. bibliography:: pubs.bib
