@@ -231,8 +231,7 @@ class Bibliography(Directive):
           :abbreviate_names: False
           :name_style: lastfirst
     """
-    required_arguments = 0
-    optional_arguments = 100
+    required_arguments, optional_arguments = 0,512
     final_argument_whitespace = False
     has_content = True
 
