@@ -45,6 +45,7 @@ from ast import literal_eval
 from os import sep as path_separator
 from os.path import join, basename, dirname, abspath
 from re import sub as replace
+from distutils.util import strtobool as boolean
 
 from docutils import nodes, utils
 from docutils.parsers.rst import directives, Directive
@@ -240,10 +241,6 @@ class Bibliography(Directive):
     def set_generator(generator):
         Bibliography.generator = generator
 
-    def boolean(argument):
-        if argument == 'True': return True
-        if argument == 'False': return False
-        raise ValueError('must be boolean')
     option_spec = {
         'template': directives.unchanged,
         'options': directives.unchanged,
