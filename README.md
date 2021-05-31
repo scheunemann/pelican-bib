@@ -2,44 +2,136 @@
 
 Organize your scientific publications with BibTeX in Pelican. The package is based on Vlad's [pelican-bibtex](https://github.com/vene/pelican-bibtex). The current version is backward compatible and can replace the `pelican-bibtex` install of your current project.
 
+
 ## Installation
 
 `pelican_bib` requires `pybtex`.
 
-    pip install pybtex
+```console
+$ pip install pybtex
+```
 
-## Using pip
+You can either install Pelican Bib using _pip_ or _as a submodule_:
 
-    pip install pelican-bib
+### Option 1: Using pip
 
-Add the plugin to the `PLUGINS` variable:
+```console
+$ pip install pelican-bib
+```
 
-    PLUGINS = ['pelican_bib', ...]
+Add the plugin to the `PLUGINS` variable (in your Pelican config, e.g. `pelicanconf.py`):
 
-### As a Submodule
+```python
+PLUGINS = ['pelican_bib', ...]
+```
+
+### Option 2: As a Submodule
 
 In your Pelican site:
 
-    $ mkdir plugins
-    $ git submodule add https://github.com/scheunemann/pelican-bib plugins/pelican-bib
+```console
+$ mkdir plugins
+$ git submodule add https://github.com/scheunemann/pelican-bib plugins/pelican-bib
+```
 
-And Pelican config:
+Register the plugin folder and add the plugin to the `PLUGINS` variable (in your Pelican config, e.g. `pelicanconf.py`):
 
-    PLUGIN_PATHS = ['plugins/pelican-bib', ...]
-    PLUGINS = ['pelican_bib', ...]
-    
+```python
+PLUGIN_PATHS = ['plugins/pelican-bib', ...]
+PLUGINS = ['pelican_bib', ...]
+```
+
+
 ## How to Use
 
 This plugin reads a user-specified BibTeX file and populates the context with
 a list of publications, ready to be used in your Jinja2 template.
 
-Configuration is simply:
+Configuration is simply: You can embed a list of publications _via directive_
+or a _page template_.
 
-    PUBLICATIONS_SRC = 'content/pubs.bib'
+### Option 1: "bibliography" directive
+
+Use the `bibliography` directive in your reST files and pass the path (or multiple paths)
+ to the bibliography file (relative to current document or absolute to Pelican content path).
+
+```rst
+.. bibliography:: pubs.bib
+.. bibliography:: /pages/publications/pubs.bib
+.. bibliography:: pubs1.bib pubs2.bib pubs3.bib
+```
+
+or provide BibTeX entries as content.
+
+```rst
+.. bibliography::
+
+  @inproceedings{doe_conf_2020,
+    author={Doe, Jane and Ordinary, Joe},
+    title={The Title of the Work},
+    booktitle={Proceedings of the Conference (CONF)},
+    year={2020}, pages={to appear}
+  }
+```
+
+Both input methods (path\[s\] and content) can be combined - entries will then be merged.
+
+You will be able to use the variable `publications` in your template.
+By default, a template with the name "bibliography" is rendered.
+Place the following template file as `bibliography.html` in your Pelican template folder
+(e.g. `content/templates`). For extended templates see [example templates](#example-templates).
+
+```jinja
+<ul>
+    {% for publication in publications %}
+      <li id="{{ publication.key }}">{{ publication.text }}</li>
+    {% endfor %}
+</ul>
+```
+
+Alternatively, you can pass a template name via `:template:` parameter to use a specific template file (e.g. "publications-by-year.html"):
+
+```rst
+.. bibliography:: pubs.bib
+   :template: publications-by-year
+```
+
+### Option 2: Page template
+
+If you set the parameter `PUBLICATIONS_SRC` in your Pelican configuration file (e.g. `pelicanconf.py`)
+
+```python
+PUBLICATIONS_SRC = 'content/pubs.bib'
+PUBLICATIONS_SRC = ['content/pubs1.bib', 'content/pubs2.bib', 'content/pubs3.bib']
+```
+
+you will be able to find the `publications` variable in _all_ your Jinja2 templates.
+
+To generate a page displaying the publications with one of the methods below, you need to add a template file and a page.
+
+1.) place the template file as `publications.html` in your Pelican template folder
+(e.g. `content/templates` and add it as direct template to your webpage.
+Add in your `pelicanconf.py`:
+
+```python
+THEME_TEMPLATES_OVERRIDES.append('templates')
+```
+
+2.) Create a page in your page folder, e.g., 'content/pages/publications.rst' with the following metadata in your content:
+
+```rst
+Publications
+############
+
+:template: publications
+```
 
 
-If the file is present and readable, you will be able to find the `publications`
-variable in all templates.  It is a list of dictionaries with the following keys:
+## Customizing Look & Feel
+
+### Variables available in templates
+
+The  `publications` variable in your Jinja2 templates is a list of dictionaries with the following keys:
 
 1. `key` is the BibTeX key (identifier) of the entry.
 2. `year` is the year when the entry was published.  Useful for grouping by year in templates using Jinja's `groupby`
@@ -49,47 +141,165 @@ available to people who want to cite your work.
 5. `pdf`, `slides`, `poster`: in your BibTeX file, you can add these special fields,
 for example:
 
-    ```
-    @article{
+   ```bib
+   @article{
        foo13
        ...
        pdf = {/papers/foo13.pdf},
        slides = {/slides/foo13.html}
-    }
-    ```
-
+   }
+   ```
 
 This plugin will take all defined fields and make them available in the template.
-If a field is not defined, the tuple field will be `None`.  Furthermore, the
-fields are stripped from the generated BibTeX (found in the `bibtex` field).
+If a field mentioned above is not defined, the tuple field will be `None`.
+Other field types can only be accessed if they are also defined in the corresponding BibTeX entry.
+
+With the help of the `options` parameter of the `bibliography` directive, you can pass additional values to the template.
+For example
+
+ ```rst
+ .. bibliography:: pubs.bib
+    :options: { 'groupby_attribute': 'year' }
+ ```
+
+would make the variable `groupby_attribute` available in the template (see [example templates](#using-additional-parameters-bibliography-directive)).
+
+### Add CSS classes to entry parts
+
+If you set the configuration variable `PUBLICATIONS_DECORATE_HTML` to `true`, the parts of a HTML formatted entry generated by `pybtex` (e.g. title, author list, volume & series) will be surrounded by `span` tags with a corresponding `class` attribute.
+
+```python
+PUBLICATIONS_DECORATE_HTML = True
+```
+
+Instead of rendering the following HTML for a bibliography entry (default)
+
+```html
+Jane Doe, and Joe Ordinary.
+<span class="bibtex-protected">The Title of the Work</span>.
+In <em>Proceedings of the Conference (CONF)</em>, to appear. 2020.
+```
+
+the rendered HTML would look like this:
+
+```html
+<span class="bib-inproceedings">
+  <span class="bib-names">Jane Doe, and Joe Ordinary.</span>
+  <span class="bib-title"><span class="bibtex-protected">The Title of the Work</span>.</span>
+  In <span class="bib-btitle"><em>Proceedings of the Conference (CONF)</em></span>, to appear.
+  <span class="bib-address_organization_publisher_date">2020.</span>
+</span>
+```
+
+Available CSS classes are (according to the `format_*` and `get_*_template` function names of
+[pybtex.style.formatting.unsrt](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/unsrt.py)):
+
+_bib-names_,
+_bib-article_,
+_bib-author_or_editor_,
+_bib-editor_,
+_bib-volume_and_series_,
+_bib-chapter_and_pages_,
+_bib-edition_,
+_bib-title_,
+_bib-btitle_,
+_bib-address_organization_publisher_date_,
+_bib-book_,
+_bib-booklet_,
+_bib-inbook_,
+_bib-incollection_,
+_bib-inproceedings_,
+_bib-manual_,
+_bib-mastersthesis_,
+_bib-misc_,
+_bib-phdthesis_,
+_bib-proceedings_,
+_bib-techreport_,
+_bib-unpublished_,
+_bib-web_refs_,
+_bib-url_,
+_bib-pubmed_,
+_bib-doi_,
+_bib-eprint_.
+
+Each bibliography is wrapped in a `div`-container with the default classes "bibliography" and the bibliography file names. Use the `class` option of the `bibliography` directive to change the class attribute name:
+
+```rst
+.. bibliography:: pubs.bib
+   :class: my-custom-bib
+```
+
+### Style parameters for pybtex
+
+You can modify arguments passed to the pybtex style that is used for rendering HTML.
+Set the variable `PUBLICATIONS_STYLE_ARGS` in your `pelicanconf.py` to set default values
+for the _named arguments_ passed to the used
+[pybtex style](https://bitbucket.org/pybtex-devs/pybtex/src/master/pybtex/style/formatting/__init__.py)
+([available values](https://bitbucket.org/pybtex-devs/pybtex/src/master/setup.py)).
+
+```python
+PUBLICATIONS_STYLE_ARGS = {
+    'sorting_style': 'author_year_title',
+    'abbreviate_names': True,
+    'name_style': 'lastfirst' }
+```
+
+You can override the pybtex style arguments in a `bibliography` directive as follows:
+
+```rst
+.. bibliography:: pubs.bib
+   :pybtex_style_args: { 'sorting_style': 'author_year_title', 'abbreviate_names': True, 'name_style': 'lastfirst' }
+```
+
+or just use the predifined options:
+
+- `sorting_style`. values: `author_year_title` (default) or `none` (sorting exactly as in the bib file)
+- `abbreviate_names`. values: `True` or `False` (default)
+- `name_style`. values: `plain` (default) or `lastfirst`
+
+```rst
+.. bibliography:: pubs.bib
+   :sorting_style: author_year_title
+   :abbreviate_names: True
+   :name_style: lastfirst
+```
 
 ### Split into lists of publications
 
-You can add an extra field to each bibtex entry. This value of that field is a comma seperated list.
-These values will become the keys of a list `publications_lists` containing the associated bibtex entries in your template.
+You can add an extra field to each BibTeX entry. This value of that field is a comma separated list.
+These values will become the keys of a list `publications_lists` containing the associated BibTeX entries in your template.
 
-For example, if you want to associate an entry with two different tags (`foo-tag`, `bar-tag`), 
+For example, if you want to associate an entry with two different tags (`foo-tag`, `bar-tag`),
 you add the following field to the bib entry:
 
-
-    @article{
-       foo13
-       ...
-       tags = {foo-tag, bar-tag}
-    }
-
+```bib
+@article{
+   ...
+   tags = {foo-tag, bar-tag}
+}
+```
 
 In your `pelicanconf.py` you'll need to set:
 
-    PUBLICATIONS_SPLIT_BY = 'tags'
-
+```python
+PUBLICATIONS_SPLIT_BY = 'tags'
+```
 
 In your template you can then access these lists with the variables `publications_lists['foo-tag']` and `publications_lists['bar-tag']`.
 
-If you want to assign all untagged entries (i.e. entries without 
-the field defined in `PUBLICATIONS_SPLIT_BY`) to a tag named `others`, set: 
+You can use the `filter_tag` option of the `bibliography` directive to only render publications containing the given tag:
 
-    PUBLICATIONS_UNTAGGED_TITLE = 'others'
+```rst
+.. bibliography:: pubs.bib
+   :filter_tag: foo-tag
+```
+
+If you want to assign all untagged entries (i.e. entries without
+the field defined in `PUBLICATIONS_SPLIT_BY`) to a tag named `others`, set:
+
+```python
+PUBLICATIONS_UNTAGGED_TITLE = 'others'
+```
 
 ### Custom pybtex styles
 
@@ -130,133 +340,184 @@ class PelicanStyle(unsrt.Style):
 alternative path to the `pybtex_plugins.py` file can be provided via
 `PUBLICATIONS_PLUGIN_PATH` in the Pelican config.
 
-## Page with a list of publications
-
-To generate a page displaying the publications with one of the methods below, you need to add a template file and a page.
-
-1.) place the template file as `publications.html` in `content/templates` and add it as direct template to your webpage. Add in your `pelicanconf.py`:
-
-
-    THEME_TEMPLATES_OVERRIDES.append('templates')
-
-
-2.) Create a page in your page folder, e.g., 'content/pages/publications.rst' with the following metadata in your content:
-
-
-    Publications
-    ############
-    
-    :template: publications
-
-
 
 ## Example templates
 
-Example content of the `publications.html` template:
+First, add the following content to your template file.
 
-    {% extends "base.html" %}
-    {% block title %}Publications{% endblock %}
-    {% block content %}
-    
-    <script type="text/javascript">
-        function disp(s) {
-            var win;
-            var doc;
-            win = window.open("", "WINDOWID");
-            doc = win.document;
-            doc.open("text/plain");
-            doc.write("<pre>" + s + "</pre>");
-            doc.close();
-        }
-    </script>
-    <section id="content" class="body">
-        <h1 class="entry-title">Publications</h1>
-        <ul>
-            {% for publication in publications %}
-              <li id="{{ publication.key }}">{{ publication.text }}
-              [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-              {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-                {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-              {% endfor %}
-              </li>
-            {% endfor %}
-        </ul>
-    </section>
-    {% endblock %}
+Variant A - Open BibTeX entry via JavaScript in new windows:
 
-_(Note: that we are escaping the BibTeX string twice in order to properly display it. 
+```jinja
+{% macro render_publication(publication) %}
+    <li id="{{ publication.key }}">
+        {{ publication.text }}
+        [&nbsp;<a href="javascript:window.open().document.write('<pre>{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}</pre>');">Bibtex</a>&nbsp;]
+        {% for label, target in [
+            ('PDF', publication.pdf),
+            ('Slides', publication.slides),
+            ('Poster', publication.poster)] %}
+            {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
+        {% endfor %}
+    </li>
+{% endmacro  %}
+```
+_(Note: that we are escaping the BibTeX string twice in order to properly display it.
 This can be achieved using `forceescape`)_
+
+Variant B - Show/hide BibTeX entry in-place via CSS:
+
+```jinja
+{% macro render_publication(publication) %}
+    <li id="{{ publication.key }}">
+        {{ publication.text }}
+        [
+        <a href="#{{ publication.key }}-bibtex">BibTeX</a>
+        {% for label, target in [
+            ('PDF', publication.pdf),
+            ('slides', publication.slides),
+            ('poster', publication.poster)] %}
+            {% if target %}
+            | <a href="{{ target }}">{{ label }}</a>
+            {% endif %}
+        {% endfor %}
+        ]
+        <div class="bib-fold" id="{{ publication.key }}-bibtex">
+            <a class="bib-close" href="#{{ publication.key }}">&times;</a>
+            <pre>{{
+            publication.bibtex
+            | trim
+            | escape
+            | replace('\n', '<br>')
+            }}</pre>
+        </div>
+    </li>
+{% endmacro  %}
+
+<style>
+    .bib-fold { display: none; }
+    .bib-fold:target { display: block; }
+    .bib-close { display: block; position: absolute; right: .2em; padding: .2em; margin-top: -.2em; margin-right: .5em; color: inherit; text-decoration: none; font-size: 3em; font-weight: bold; background-color: #fff; }
+</style>
+```
+
+Then, add the following content (to the same file).
+
+Example content of the `bibliography.html` template _(Option 1: "bibliography" directive)_:
+
+```jinja
+<ul>
+    {% for publication in publications %}
+        {{ render_publication(publication) }}
+    {% endfor %}
+</ul>
+```
+
+Example content of the `publications.html` template _(Option 2: Page template)_:
+
+```jinja
+{% extends "base.html" %}
+{% block title %}Publications{% endblock %}
+{% block content %}
+
+<section id="content" class="body">
+    <h1 class="entry-title">Publications</h1>
+    <ul>
+        {{ render_publication(publication) }}
+    </ul>
+</section>
+{% endblock %}
+```
 
 ### Sorting entries
 
 The entries can be sorted by one of the attributes, for example, if you want to sort the entries by date, your unordered list would look like the following:
 
+```jinja
+<ul>
+{% for publication in publications|sort(True, attribute='year') %}
+    {{ render_publication(publication) }}
+{% endfor %}
+</ul>
+```
 
-    ...
-        <ul>
-            {% for publication in publications|sort(True, attribute='year') %}
-              <li id="{{ publication.key }}">{{ publication.text }}
-              [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-              {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-                {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-              {% endfor %}
-              </li>
-            {% endfor %}
-        </ul>
-    ...
-
-
-The [sort builtin filter](http://jinja.pocoo.org/docs/2.10/templates/#sort) was added in version 2.6 of jinja2. 
+The [sort builtin filter](http://jinja.pocoo.org/docs/2.10/templates/#sort) was added in version 2.6 of jinja2.
 
 ### Grouping entries
 
 To group entries by year,
 
-
-    ...
-    <ul>
-      {% for grouper, publist in publications|groupby('year')|reverse %}
-      <li> {{grouper}}
+```jinja
+<ul>
+    {% for grouper, publist in publications|groupby('year')|reverse %}
+    <li> {{grouper}}
         <ul>
         {% for publication in publist %}
-          <li id="{{ publication.key }}">{{ publication.text }}
-          [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-          {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-            {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-          {% endfor %}
-          </li>
+            {{ render_publication(publication) }}
         {% endfor %}
-        </ul></li>
-      {% endfor %}
-    </ul>
-    ...
-
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+```
 
 ### Using lists of publications
 
 As described above, lists of publications are stored in `publications_lists`.
-You can replace `publications` from the previous example with `publications_lists['foo-tag']` to only show the publications with tagged with `foo-tag`. 
+You can replace `publications` from the previous example with `publications_lists['foo-tag']` to only show the publications with tagged with `foo-tag`.
 
 You can also iterate over the map and present all bib entries of each list.
 The section of the previous example changes to:
 
-    ...
-    <section id="content" class="body">
-        <h1 class="entry-title">Publications</h1>
-        {% for tag in publications_lists %}
-            {% if publications_lists|length > 1 %}
-                <h2>{{tag}}</h2>
-            {% endif %}
-    	       <ul>
-    	       {% for publication  in  publications_lists[tag] %}
-                <li id="{{ publication.bibkey }}">{{ publication.text }}
-                [&nbsp;<a href="javascript:disp('{{ publication.bibtex|replace('\n', '\\n')|escape|forceescape }}');">Bibtex</a>&nbsp;]
-                {% for label, target in [('PDF', publication.pdf), ('Slides', publication.slides), ('Poster', publication.poster)] %}
-                    {{ "[&nbsp;<a href=\"%s\">%s</a>&nbsp;]" % (target, label) if target }}
-                {% endfor %}
-                </li>
-    	       {% endfor %}
-    	       </ul>
-    	   {% endfor %}
-    </section>
-    ...
+```jinja
+{% for tag in publications_lists %}
+    {% if publications_lists|length > 1 %}
+        <h2>{{tag}}</h2>
+    {% endif %}
+        <ul>
+        {% for publication  in  publications_lists[tag] %}
+            {{ render_publication(publication) }}
+        {% endfor %}
+        </ul>
+{% endfor %}
+```
+
+### Using additional parameters ("bibliography" directive)
+
+Group by year:
+
+```rst
+ .. bibliography:: pubs.bib
+    :options: { 'groupby_attribute': 'year' }
+ ```
+
+No grouping:
+
+```rst
+ .. bibliography:: pubs.bib
+ ```
+
+If the parameter `groupby_attribute` is passed to the template, the list of publications will be grouped by this attribute.
+Otherwise, the plain list will shown:
+
+```jinja
+{% if groupby_attribute %}
+    {% for year_number, year_publications in publications|groupby(groupby_attribute)|reverse %}
+        <section id="{{ year_number }}">
+            <h2>
+                <a href="#{{ year_number }}">{{ year_number }}</a>
+            </h2>
+            <ul>
+            {% for publication in year_publications %}
+                {{ render_publication(publication) }}
+            {% endfor %}
+            </ul>
+        </section>
+    {% endfor %}
+{% else %}
+    <ul>
+    {% for publication in publications %}
+        {{ render_publication(publication) }}
+    {% endfor %}
+    </ul>
+{% endif %}
+```
