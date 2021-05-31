@@ -11,7 +11,7 @@ Organize your scientific publications with BibTeX in Pelican. The package is bas
 $ pip install pybtex
 ```
 
-You can either install Pelican Bib using _pip_ or _as a submodule_:
+You can either install Pelican Bib using _pip_ (currently on version [0.2.7](https://github.com/scheunemann/pelican-bib/tree/0.2.7) ) or _as a submodule_:
 
 ### Option 1: Using pip
 
